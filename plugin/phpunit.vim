@@ -1,8 +1,27 @@
-
+"
+" TODO: use airline to provide some "infintetest" and autocmd BufWrite to
+" launch tests
+"
 
 highlight PHPUnitFail guibg=Red ctermbg=Red guifg=White ctermfg=White
 highlight PHPUnitOK guibg=Green ctermbg=Green guifg=Black ctermfg=Black
 highlight PHPUnitAssertFail guifg=LightRed ctermfg=LightRed
+
+if !exists('s:phpunit_bufname')
+  let s:phpunit_bufname = 'PHPUnit'
+endif
+
+if !exists('g:phpunit_show_in_preview')
+  let g:phpunit_show_in_preview = 1 " TODO: pass to 0 for production, keeping old functionality
+endif
+
+if !exists('g:phpunit_vertical')
+  let g:phpunit_vertical = 0
+endif
+
+if !exists('g:phpunit_position')
+  let g:phpunit_position = 'botright'
+endif
 
 " root of unit tests
 if !exists('g:phpunit_testroot')
@@ -21,7 +40,7 @@ if !exists('g:phpunit_bin')
 endif
 
 if !exists('g:phpunit_options')
-  let g:phpunit_options = ['--stop-on-failure', '--columns=50'] 
+  let g:phpunit_options = ['--stop-on-failure', '--columns=50']
 endif
 
 " you can set there subset of tests if you do not want to run
@@ -51,8 +70,55 @@ fun! g:PHPUnit.Run(cmd, title)
   redraw
   echomsg "* Done PHP Unit test(s) [" . a:title . "] *"
   echohl None
-  let output = system(join(a:cmd," "))
-  silent call g:PHPUnit.OpenBuffer(output)
+
+  if g:phpunit_show_in_preview
+    silent call g:PHPUnit.PreviewTestResult(join(a:cmd, " "))
+  else
+    let output = system(join(a:cmd, " "))
+    silent call g:PHPUnit.OpenBuffer(output)
+  endif
+endfun
+
+fun! g:PHPUnit.PreviewTestResult(cmd)
+  pclose! " Need it to work when the preview window is already opened
+
+  call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
+
+  call s:OpenPreview(bufnr(s:phpunit_bufname))
+endfun
+
+fun! s:ExecuteInBuffer(cmd, bufnr)
+  execute ':buffer ' . a:bufnr
+
+  " nocursorline is needed for some colorscheme with CursorLine which change ctermbg
+  setlocal nobuflisted
+    \ nocursorline
+    \ nonumber
+    \ nowrap
+    \ filetype=phpunit
+    \ modifiable
+    \ buftype=nofile
+    \ bufhidden=hide
+    \ noswapfile
+
+  silent %delete " Delete the content of the buffer
+
+  " Execute the commande and put the result in the buffer
+  execute "read !" . a:cmd
+
+  setlocal nomodifiable
+
+  buffer # " Go back to the original buffer
+endfun
+
+fun! s:OpenPreview(file)
+  let vertical = ''
+  if g:phpunit_vertical
+    let vertical .= 'vertical'
+  endif
+
+  execute ":" . vertical . " " . g:phpunit_position . " pedit #" . a:file
+
 endfun
 
 fun! g:PHPUnit.OpenBuffer(content)
@@ -102,19 +168,19 @@ endfun
 fun! g:PHPUnit.RunAll()
   let cmd = g:PHPUnit.buildBaseCommand()
   let cmd = cmd + [expand(g:phpunit_testroot)]
- 
-  silent call g:PHPUnit.Run(cmd, "RunAll") 
+
+  silent call g:PHPUnit.Run(cmd, "RunAll")
 endfun
 
 fun! g:PHPUnit.RunCurrentFile()
   let cmd = g:PHPUnit.buildBaseCommand()
-  let cmd = cmd +  [bufname("%")]
-  silent call g:PHPUnit.Run(cmd, bufname("%")) 
+  let cmd = cmd +  [expand("%:p")]
+  silent call g:PHPUnit.Run(cmd, bufname("%"))
 endfun
 fun! g:PHPUnit.RunTestCase(filter)
   let cmd = g:PHPUnit.buildBaseCommand()
   let cmd = cmd + ["--filter", a:filter , bufname("%")]
-  silent call g:PHPUnit.Run(cmd, bufname("%") . ":" . a:filter) 
+  silent call g:PHPUnit.Run(cmd, bufname("%") . ":" . a:filter)
 endfun
 
 fun! g:PHPUnit.SwitchFile()
@@ -135,7 +201,7 @@ fun! g:PHPUnit.SwitchFile()
     let file = file . 'Test.php'
     let cmd = 'bo '
   endif
-  " exec 'tabe ' . f 
+  " exec 'tabe ' . f
 
   " is there window with complent file open?
   let win = bufwinnr(file)
@@ -144,7 +210,7 @@ fun! g:PHPUnit.SwitchFile()
   else
     execute cmd . "vsplit " . file
     let dir = expand('%:h')
-    if ! isdirectory(dir) 
+    if ! isdirectory(dir)
       cal mkdir(dir,'p')
     endif
   endif
