@@ -134,7 +134,9 @@ endfun
 
 command! -nargs=0 PHPUnitRunAll :call g:PHPUnit.RunAll()
 command! -nargs=0 PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile()
-command! -nargs=1 PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
+" TODO: use -complete=customlist,{func} => create a function to retrieve all the
+" tests functions of a test file - see :h E467
+command! -nargs=1 -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
 command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
 
