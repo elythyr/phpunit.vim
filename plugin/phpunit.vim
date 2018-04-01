@@ -71,9 +71,13 @@ if !exists('g:phpunit_tests')
 endif
 
 
-nnoremap <Leader>ta :PHPUnitRunAll<CR>
-nnoremap <Leader>tf :PHPUnitRunCurrentFile<CR>
-nnoremap <Leader>ts :PHPUnitSwitchFile<CR>
+nnoremap <unique> <Plug>PhpunitRunall :PHPUnitRunAll<CR>
+nnoremap <unique> <Plug>PhpunitRuncurrentfile :PHPUnitRunCurrentFile<CR>
+nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
+
+nmap <Leader>ta <Plug>PhpunitRunall
+nmap <Leader>tf <Plug>PhpunitRuncurrentfile
+nmap <Leader>ts <Plug>PhpunitSwitchfile
 
 
 let g:PHPUnit = {}
