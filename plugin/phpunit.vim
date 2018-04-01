@@ -9,27 +9,29 @@ if !exists('s:phpunit_bufname')
   let s:phpunit_bufname = 'PHPUnit'
 endif
 
-if !exists('g:phpunit_show_in_preview')
-  let g:phpunit_show_in_preview = 0 " TODO: pass to 0 for production, keeping old functionality
+if !exists('g:phpunit_tests_result_in_preview')
+  let g:phpunit_tests_result_in_preview = 0
 endif
 
-if !exists('g:phpunit_vertical')
-  if g:phpunit_show_in_preview
-    let g:phpunit_vertical = 0
+if !exists('g:phpunit_tests_result_position')
+  if g:phpunit_tests_result_in_preview
+    let g:phpunit_tests_result_position = ['botright']
   else
-    let g:phpunit_vertical = 1
+    let g:phpunit_tests_result_position = ['vertical', 'rightbelow']
   endif
 endif
 
-if !exists('g:phpunit_window_width')
-  let g:phpunit_window_width = 50
-endif
+" Forced to declare it here because it needs to be available when the script
+" is loaded
+fun! s:OpenTestsResultsVerticaly()
+  return -1 != index(g:phpunit_tests_result_position, 'vertical')
+endfun
 
-if !exists('g:phpunit_position')
-  if g:phpunit_show_in_preview
-    let g:phpunit_position = 'botright'
+if !exists('g:phpunit_window_size')
+  if s:OpenTestsResultsVerticaly()
+    let g:phpunit_window_size = 50 " Width
   else
-    let g:phpunit_position = 'rightbelow'
+    let g:phpunit_window_size = 12 " Height
   endif
 endif
 
@@ -103,7 +105,7 @@ fun! g:PHPUnit.SwitchFile()
   if !filereadable(l:file_to_open)
     echoerr printf('The file "%s" is not readable', l:file_to_open)
     return
-    endif
+  endif
 
   let l:file_window = bufwinnr(l:file_to_open)
 
@@ -154,14 +156,14 @@ fun! s:Run(cmd, title)
   echomsg "* Done PHP Unit test(s) [" . a:title . "] *"
   echohl None
 
-  if g:phpunit_show_in_preview
-    silent call s:PreviewTestResult(join(a:cmd, ' '))
+  if g:phpunit_tests_result_in_preview
+    silent call s:PreviewTestsResults(join(a:cmd, ' '))
   else
-    silent call s:OpenTestResultInWindow(join(a:cmd, ' '))
+    silent call s:OpenTestsResultsInWindow(join(a:cmd, ' '))
   endif
 endfun
 
-fun! s:PreviewTestResult(cmd)
+fun! s:PreviewTestsResults(cmd)
   pclose! " Need it to work when the preview window is already opened
 
   call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
@@ -169,7 +171,7 @@ fun! s:PreviewTestResult(cmd)
   call s:OpenPreview(bufnr(s:phpunit_bufname))
 endfun
 
-fun! s:OpenTestResultInWindow(cmd)
+fun! s:OpenTestsResultsInWindow(cmd)
   call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
 
   call s:OpenWindow(bufnr(s:phpunit_bufname))
@@ -200,15 +202,11 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
 endfun
 
 fun! s:OpenPreview(bufnr)
-  let vertical = ''
-  if g:phpunit_vertical
-    let vertical .= 'vertical'
-  endif
-
-  execute ':' . vertical . ' ' . g:phpunit_position . ' pedit #' . a:bufnr
+  execute ':' . join(g:phpunit_tests_result_position, ' ') . ' pedit #' . a:bufnr
 
   wincmd p " Go to the preview window
   setlocal nobuflisted
+  call s:ResizeTestsResultsWidow()
   wincmd p " Go back to the user window
 endfun
 
@@ -219,13 +217,18 @@ fun! s:OpenWindow(bufnr)
     return
   endif
 
-  let vertical = ''
-  if g:phpunit_vertical
-    let vertical .= 'vertical'
-  endif
+  execute ':' . join(g:phpunit_tests_result_position, ' ') . ' sb ' . a:bufnr
 
-  execute ':' . vertical . ' ' . g:phpunit_position . ' sb ' . a:bufnr
-  execute ':' . vertical . ' resize' . g:phpunit_window_width
+  call s:ResizeTestsResultsWidow()
 
   wincmd p
+endfun
+
+fun! s:ResizeTestsResultsWidow()
+  let l:cmd = ':'
+  if s:OpenTestsResultsVerticaly()
+    let l:cmd .= 'vertical '
+  endif
+
+  execute l:cmd . 'resize ' . g:phpunit_window_size
 endfun
