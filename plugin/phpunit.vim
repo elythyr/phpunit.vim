@@ -48,6 +48,10 @@ else
   let g:phpunit_srcroot = finddir(g:phpunit_srcroot, '.;')
 endif
 
+if !exists('g:phpunit_test_file_ends_with')
+  let g:phpunit_test_file_ends_with = 'Test.php'
+endif
+
 if !exists('g:php_bin')
   let g:php_bin = ''
 endif
@@ -75,20 +79,20 @@ nnoremap <Leader>ts :PHPUnitSwitchFile<CR>
 let g:PHPUnit = {}
 
 fun! g:PHPUnit.RunAll()
-  let cmd = s:buildBaseCommand()
+  let cmd = s:BuildBaseCommand()
   let cmd = cmd + [expand(g:phpunit_testroot)]
 
   silent call s:Run(cmd, "RunAll")
 endfun
 
 fun! g:PHPUnit.RunCurrentFile()
-  let cmd = s:buildBaseCommand()
+  let cmd = s:BuildBaseCommand()
   let cmd = cmd +  [expand("%:p")]
   silent call s:Run(cmd, bufname("%"))
 endfun
 
 fun! g:PHPUnit.RunTestCase(filter)
-  let cmd = s:buildBaseCommand()
+  let cmd = s:BuildBaseCommand()
   let cmd = cmd + ["--filter", a:filter , bufname("%")]
   silent call s:Run(cmd, bufname("%") . ":" . a:filter)
 endfun
@@ -125,19 +129,19 @@ command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
 fun! s:GetSrcFile(test_file)
     let l:src_file = substitute(a:test_file, g:phpunit_testroot, g:phpunit_srcroot, '')
-    return substitute(l:src_file, 'Test\.php$', '.php', '')
+    return substitute(l:src_file, '\M' . g:phpunit_test_file_ends_with . '$', '.php', '')
 endfun
 
 fun! s:GetTestFile(src_file)
     let l:test_file = substitute(a:src_file, g:phpunit_srcroot, g:phpunit_testroot, '')
-    return fnamemodify(l:test_file, ':r') . 'Test.php'
+    return fnamemodify(l:test_file, ':r') . g:phpunit_test_file_ends_with
 endfun
 
 fun! s:IsATestFile(filename)
-  return a:filename =~ 'Test\.php$'
+  return a:filename =~ '\M' . g:phpunit_test_file_ends_with . '$'
 endfun!
 
-fun! s:buildBaseCommand()
+fun! s:BuildBaseCommand()
   let cmd = []
   if g:php_bin != ""
     call add(cmd, g:php_bin)
