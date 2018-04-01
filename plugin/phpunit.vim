@@ -1,11 +1,8 @@
 "
 " TODO: use airline to provide some "infintetest" and autocmd BufWrite to
-" launch tests
+" launch tests, maybe change the color of the top tab ? but not everybody
+" print it
 "
-
-highlight PHPUnitFail guibg=Red ctermbg=Red guifg=White ctermfg=White
-highlight PHPUnitOK guibg=Green ctermbg=Green guifg=Black ctermfg=Black
-highlight PHPUnitAssertFail guifg=LightRed ctermfg=LightRed
 
 if !exists('s:phpunit_bufname')
   let s:phpunit_bufname = 'PHPUnit'
@@ -17,10 +14,16 @@ endif
 
 if !exists('g:phpunit_vertical')
   let g:phpunit_vertical = 0
+  "let g:phpunit_vertical = 1
+endif
+
+if !exists('g:phpunit_window_width')
+  let g:phpunit_window_width = 50
 endif
 
 if !exists('g:phpunit_position')
   let g:phpunit_position = 'botright'
+  "let g:phpunit_position = 'rightbelow'
 endif
 
 " root of unit tests
@@ -72,19 +75,24 @@ fun! g:PHPUnit.Run(cmd, title)
   echohl None
 
   if g:phpunit_show_in_preview
-    silent call g:PHPUnit.PreviewTestResult(join(a:cmd, " "))
+    silent call s:PreviewTestResult(join(a:cmd, ' '))
   else
-    let output = system(join(a:cmd, " "))
-    silent call g:PHPUnit.OpenBuffer(output)
+    silent call s:OpenTestResultInWindow(join(a:cmd, ' '))
   endif
 endfun
 
-fun! g:PHPUnit.PreviewTestResult(cmd)
+fun! s:PreviewTestResult(cmd)
   pclose! " Need it to work when the preview window is already opened
 
   call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
 
   call s:OpenPreview(bufnr(s:phpunit_bufname))
+endfun
+
+fun! s:OpenTestResultInWindow(cmd)
+  call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
+
+  call s:OpenWindow(bufnr(s:phpunit_bufname))
 endfun
 
 fun! s:ExecuteInBuffer(cmd, bufnr)
@@ -104,60 +112,40 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
   silent %delete " Delete the content of the buffer
 
   " Execute the commande and put the result in the buffer
-  execute "read !" . a:cmd
+  execute 'read !' . a:cmd
 
   setlocal nomodifiable
 
   buffer # " Go back to the original buffer
 endfun
 
-fun! s:OpenPreview(file)
+fun! s:OpenPreview(bufnr)
   let vertical = ''
   if g:phpunit_vertical
     let vertical .= 'vertical'
   endif
 
-  execute ":" . vertical . " " . g:phpunit_position . " pedit #" . a:file
+  execute ':' . vertical . ' ' . g:phpunit_position . ' pedit #' . a:bufnr
 
+  wincmd p " Go to the preview window
+  setlocal nobuflisted
+  wincmd p " Go back to the user window
 endfun
 
-fun! g:PHPUnit.OpenBuffer(content)
-  " is there phpunit_buffer?
-  if exists('g:phpunit_buffer') && bufexists(g:phpunit_buffer)
-    let phpunit_win = bufwinnr(g:phpunit_buffer)
-    " is buffer visible?
-    if phpunit_win > 0
-      " switch to visible phpunit buffer
-      execute phpunit_win . "wincmd w"
-    else
-      " split current buffer, with phpunit_buffer
-      execute "rightbelow vertical sb ".g:phpunit_buffer
-    endif
-    " well, phpunit_buffer is opened, clear content
-    setlocal modifiable
-    silent %d
-  else
-    " there is no phpunit_buffer create new one
-    rightbelow 50vnew
-    let g:phpunit_buffer=bufnr('%')
+fun! s:OpenWindow(bufnr)
+  let l:phpunit_win = bufwinnr(a:bufnr)
+  " is buffer visible?
+  if -1 != l:phpunit_win
+    return
   endif
 
-  file PHPUnit
-  " exec 'file Diff-' . file
-  setlocal nobuflisted cursorline nonumber nowrap buftype=nofile filetype=phpunit modifiable bufhidden=hide
-  setlocal noswapfile
-  silent put=a:content
-  "efm=%E%\\d%\\+)\ %m,%CFailed%m,%Z%f:%l,%-G
-  " FIXME: It is better use match(), or :syntax
+  let vertical = ''
+  if g:phpunit_vertical
+    let vertical .= 'vertical'
+  endif
 
-  call matchadd("PHPUnitFail","^FAILURES.*$")
-  call matchadd("PHPUnitOK","^OK .*$")
-
-  call matchadd("PHPUnitFail","^not ok .*$")
-  call matchadd("PHPUnitOK","^ok .*$")
-
-  call matchadd("PHPUnitAssertFail","^Failed asserting.*$")
-  setlocal nomodifiable
+  execute ':' . vertical . ' ' . g:phpunit_position . ' sb ' . a:bufnr
+  execute ':' . vertical . ' resize' . g:phpunit_window_width
 
   wincmd p
 endfun
