@@ -2,6 +2,7 @@
 " TODO: use airline to provide some "infintetest" and autocmd BufWrite to
 " launch tests, maybe change the color of the top tab ? but not everybody
 " print it
+" TODO: add genereation of testcase, use ultisnip ?
 "
 
 if !exists('s:phpunit_bufname')
@@ -34,10 +35,15 @@ endif
 
 " root of unit tests
 if !exists('g:phpunit_testroot')
-  let g:phpunit_testroot = 'tests'
+  let g:phpunit_testroot = fnamemodify(finddir('tests', '.;'), ':p:h')
 endif
+
 if !exists('g:phpunit_srcroot')
-  let g:phpunit_srcroot = 'src'
+  let g:phpunit_srcroot = fnamemodify(finddir('src', '.;'), ':p')
+elseif '.' == g:phpunit_srcroot
+  let g:phpunit_srcroot = fnamemodify(g:phpunit_testroot, ':h')
+else
+  let g:phpunit_srcroot = finddir(g:phpunit_srcroot, '.;')
 endif
 
 if !exists('g:php_bin')
@@ -78,6 +84,7 @@ fun! g:PHPUnit.RunCurrentFile()
   let cmd = cmd +  [expand("%:p")]
   silent call s:Run(cmd, bufname("%"))
 endfun
+
 fun! g:PHPUnit.RunTestCase(filter)
   let cmd = s:buildBaseCommand()
   let cmd = cmd + ["--filter", a:filter , bufname("%")]
@@ -85,37 +92,27 @@ fun! g:PHPUnit.RunTestCase(filter)
 endfun
 
 fun! g:PHPUnit.SwitchFile()
-  let file = expand('%')
-  let cmd = ''
-  let isTest = expand('%:t') =~ "Test\.php$"
+  let l:file_to_open = ''
 
-  if isTest
-    " replace phpunit_testroot with libroot
-    let file = substitute(file, '^' . g:phpunit_testroot . '/', g:phpunit_srcroot . '/', '')
-
-    " remove 'Test.' from filename
-    let file = substitute(file,'Test\.php$','.php','')
-    let cmd = 'to '
+  if s:IsATestFile(expand('%'))
+    let l:file_to_open = s:GetSrcFile(expand('%:p'))
   else
-    let file = expand('%:r')
-    let file = substitute(file,'^'.g:phpunit_srcroot, g:phpunit_testroot, '')
-    let file = file . 'Test.php'
-    let cmd = 'bo '
+    let l:file_to_open = s:GetTestFile(expand('%:p'))
   endif
-  " exec 'tabe ' . f
 
-  " is there window with complent file open?
-  let win = bufwinnr(file)
-  if win > 0
-    execute win . "wincmd w"
-  else
-    execute cmd . "vsplit " . file
-    let dir = expand('%:h')
-    if ! isdirectory(dir)
-      cal mkdir(dir,'p')
+  if !filereadable(l:file_to_open)
+    echoerr printf('The file "%s" is not readable', l:file_to_open)
+    return
     endif
+
+  let l:file_window = bufwinnr(l:file_to_open)
+
+  if -1 != l:file_window
+    execute l:file_window . 'wincmd w'
+  else
+    execute 'split ' . l:file_to_open
   endif
-endf
+endfun
 
 
 command! -nargs=0 PHPUnitRunAll :call g:PHPUnit.RunAll()
@@ -123,6 +120,20 @@ command! -nargs=0 PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile()
 command! -nargs=1 PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
 command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
+
+fun! s:GetSrcFile(test_file)
+    let l:src_file = substitute(a:test_file, g:phpunit_testroot, g:phpunit_srcroot, '')
+    return substitute(l:src_file, 'Test\.php$', '.php', '')
+endfun
+
+fun! s:GetTestFile(src_file)
+    let l:test_file = substitute(a:src_file, g:phpunit_srcroot, g:phpunit_testroot, '')
+    return fnamemodify(l:test_file, ':r') . 'Test.php'
+endfun
+
+fun! s:IsATestFile(filename)
+  return a:filename =~ 'Test\.php$'
+endfun!
 
 fun! s:buildBaseCommand()
   let cmd = []
