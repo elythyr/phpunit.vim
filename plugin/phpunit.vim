@@ -87,8 +87,19 @@ endfun
 
 fun! g:PHPUnit.RunCurrentFile()
   let cmd = s:BuildBaseCommand()
-  let cmd = cmd +  [expand("%:p")]
-  silent call s:Run(cmd, bufname("%"))
+
+  let l:test_file = expand('%:p')
+  if !s:IsATestFile(l:test_file)
+    let l:test_file = s:GetTestFile(l:test_file)
+  endif
+
+  if empty(glob(l:test_file))
+    echoerr printf('The test file "%s" does not exists', l:test_file)
+    return
+  endif
+
+  let cmd = cmd + [l:test_file]
+  silent call s:Run(cmd, fnamemodify(l:test_file, ':t'))
 endfun
 
 fun! g:PHPUnit.RunTestCase(filter)
