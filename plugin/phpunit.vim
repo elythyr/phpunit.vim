@@ -113,7 +113,6 @@ fun! g:PHPUnit.RunCurrentFile()
   let l:test_file = s:GetCurrentTestFile()
 
   if empty(glob(l:test_file))
-    echoerr printf('The test file "%s" does not exists', l:test_file)
     return
   endif
 
