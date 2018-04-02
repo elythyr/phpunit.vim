@@ -86,7 +86,7 @@ fun! g:PHPUnit.RunAll()
   let cmd = s:BuildBaseCommand()
   let cmd = cmd + [expand(g:phpunit_testroot)]
 
-  silent call s:Run(cmd, "RunAll")
+  call s:Run(cmd, "RunAll")
 endfun
 
 fun! g:PHPUnit.RunCurrentFile()
@@ -103,13 +103,13 @@ fun! g:PHPUnit.RunCurrentFile()
   endif
 
   let cmd = cmd + [l:test_file]
-  silent call s:Run(cmd, fnamemodify(l:test_file, ':t'))
+  call s:Run(cmd, fnamemodify(l:test_file, ':t:r'))
 endfun
 
 fun! g:PHPUnit.RunTestCase(filter)
   let cmd = s:BuildBaseCommand()
   let cmd = cmd + ["--filter", a:filter , bufname("%")]
-  silent call s:Run(cmd, bufname("%") . ":" . a:filter)
+  call s:Run(cmd, bufname("%") . ":" . a:filter)
 endfun
 
 fun! g:PHPUnit.SwitchFile()
@@ -169,37 +169,21 @@ fun! s:BuildBaseCommand()
 endfun
 
 fun! s:Run(cmd, title)
-  redraw
-  echohl Title
-  echomsg "* Running PHP Unit test(s) [" . a:title . "] *"
-  echohl None
-  redraw
-  echomsg "* Done PHP Unit test(s) [" . a:title . "] *"
-  echohl None
+  call s:DebugTitle(printf('Running PHP Unit test(s) [%s]', a:title))
+  call s:Debug(' * Using the command : ' . join(a:cmd, ' '))
 
-  if g:phpunit_tests_result_in_preview
-    silent call s:PreviewTestsResults(join(a:cmd, ' '))
-  else
-    silent call s:OpenTestsResultsInWindow(join(a:cmd, ' '))
+  call s:ExecuteInBuffer(join(a:cmd, ' '), bufnr(s:phpunit_bufname, 1))
+
+  call s:OpenTestsResults()
+
+  if s:IsDebugActivated()
+    redraw! " Need to redraw if we print some output
   endif
 endfun
 
-fun! s:PreviewTestsResults(cmd)
-  pclose! " Need it to work when the preview window is already opened
-
-  call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
-
-  call s:OpenPreview(bufnr(s:phpunit_bufname))
-endfun
-
-fun! s:OpenTestsResultsInWindow(cmd)
-  call s:ExecuteInBuffer(a:cmd, bufnr(s:phpunit_bufname, 1))
-
-  call s:OpenWindow(bufnr(s:phpunit_bufname))
-endfun
-
 fun! s:ExecuteInBuffer(cmd, bufnr)
-  execute ':buffer ' . a:bufnr
+  silent execute ':buffer ' . a:bufnr
+  call s:Debug(' * Switched to buffer #' . a:bufnr)
 
   " nocursorline is needed for some colorscheme with CursorLine which change ctermbg
   " I don't know why but if the type of the buffer is nofile then whe have an
@@ -223,17 +207,32 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
     \ buftype=nowrite
 
   silent %delete " Delete the content of the buffer
+  call s:Debug(' * Content deleted')
 
   " Execute the commande and put the result in the buffer
-  execute 'read !' . a:cmd
+  silent execute 'read !' . a:cmd
+  call s:Debug(printf(' * Command "%s" read into the buffer', a:cmd))
 
   setlocal nomodifiable
 
-  buffer # " Go back to the original buffer
+  silent buffer # " Go back to the original buffer
+  call s:Debug(' * Switched back to the previous buffer #' . bufnr('%'))
+endfun
+
+fun! s:OpenTestsResults()
+  if -1 != bufwinnr(s:phpunit_bufname)
+    return
+  endif
+
+  if g:phpunit_tests_result_in_preview
+    call s:OpenPreview(bufnr(s:phpunit_bufname))
+  else
+    call s:OpenWindow(bufnr(s:phpunit_bufname))
+  endif
 endfun
 
 fun! s:OpenPreview(bufnr)
-  execute ':' . join(g:phpunit_tests_result_position, ' ') . ' pedit #' . a:bufnr
+  silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' pedit #' . a:bufnr
 
   wincmd p " Go to the preview window
   setlocal nobuflisted
@@ -242,13 +241,7 @@ fun! s:OpenPreview(bufnr)
 endfun
 
 fun! s:OpenWindow(bufnr)
-  let l:phpunit_win = bufwinnr(a:bufnr)
-  " is buffer visible?
-  if -1 != l:phpunit_win
-    return
-  endif
-
-  execute ':' . join(g:phpunit_tests_result_position, ' ') . ' sb ' . a:bufnr
+  silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' sb ' . a:bufnr
 
   call s:ResizeTestsResultsWidow()
 
@@ -262,4 +255,21 @@ fun! s:ResizeTestsResultsWidow()
   endif
 
   execute l:cmd . 'resize ' . g:phpunit_window_size
+endfun
+
+fun! s:DebugTitle(msg)
+  echohl Question
+  call s:Debug('PHPUnit - ' . a:msg)
+  echohl none
+endfun
+
+fun! s:Debug(msg)
+  if s:IsDebugActivated()
+    silent! redraw
+    echomsg a:msg
+  endif
+endfun
+
+fun! s:IsDebugActivated()
+  return 1 <= &vbs
 endfun
