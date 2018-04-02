@@ -1,5 +1,5 @@
 "
-" TODO: use airline to provide some "infintetest" and autocmd BufWrite to
+" TODO: use airline to provide some "infintest" and autocmd BufWrite to
 " launch tests, maybe change the color of the top tab ? but not everybody
 " print it
 " TODO: add genereation of testcase, use ultisnip ?
@@ -64,6 +64,10 @@ if !exists('g:phpunit_options')
   let g:phpunit_options = ['--stop-on-failure', '--columns=50']
 endif
 
+if !exists('g:phpunit_launch_test_on_save')
+  let g:phpunit_launch_test_on_save = 0
+endif
+
 " you can set there subset of tests if you do not want to run
 " full set
 if !exists('g:phpunit_tests')
@@ -78,6 +82,20 @@ nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
 nmap <Leader>ta <Plug>PhpunitRunall
 nmap <Leader>tf <Plug>PhpunitRuncurrentfile
 nmap <Leader>ts <Plug>PhpunitSwitchfile
+
+augroup phpunit
+  autocmd!
+  if g:phpunit_launch_test_on_save
+    autocmd BufWritePost *.php :PHPUnitRunCurrentFile
+  endif
+augroup END
+
+command! -nargs=0 PHPUnitRunAll :call g:PHPUnit.RunAll()
+command! -nargs=0 PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile()
+" TODO: use -complete=customlist,{func} => create a function to retrieve all the
+" tests functions of a test file - see :h E467
+command! -nargs=1 -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
+command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
 
 let g:PHPUnit = {}
@@ -131,14 +149,6 @@ fun! g:PHPUnit.SwitchFile()
     execute 'split ' . l:file_to_open
   endif
 endfun
-
-
-command! -nargs=0 PHPUnitRunAll :call g:PHPUnit.RunAll()
-command! -nargs=0 PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile()
-" TODO: use -complete=customlist,{func} => create a function to retrieve all the
-" tests functions of a test file - see :h E467
-command! -nargs=1 -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
-command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
 
 fun! s:GetSrcFileFor(file)
