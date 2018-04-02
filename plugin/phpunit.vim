@@ -202,15 +202,25 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
   execute ':buffer ' . a:bufnr
 
   " nocursorline is needed for some colorscheme with CursorLine which change ctermbg
-  setlocal nobuflisted
+  " I don't know why but if the type of the buffer is nofile then whe have an
+  " issue with the preview window, this is how I found it:
+  "   1 - Open a file
+  "   2 - <Leader>tf
+  "   3 - <Leader>ts
+  "   4 - CTRL-W-z => close the preview window
+  "   5 - <Leader>tf
+  " Then the preview window is empty
+  " Type :ls! and we can see that a fourth buffer has been created, with the
+  " same name : PHPUnit
+  setlocal modifiable
     \ nocursorline
     \ nonumber
     \ nowrap
     \ filetype=phpunit
-    \ modifiable
-    \ buftype=nofile
+    \ nobuflisted
     \ bufhidden=hide
     \ noswapfile
+    \ buftype=nowrite
 
   silent %delete " Delete the content of the buffer
 
