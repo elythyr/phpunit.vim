@@ -6,7 +6,7 @@
 "
 
 if !exists('s:phpunit_bufname_format')
-  let s:phpunit_bufname_format = 'PHPUnit - %s'
+  let s:phpunit_bufname_format = 'PHPUnit-%s'
 endif
 
 if !exists('g:phpunit_tests_result_in_preview')
@@ -234,10 +234,6 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
 endfun
 
 fun! s:OpenTestsResults()
-  if -1 != bufwinnr(t:phpunit_bufname)
-    return
-  endif
-
   if g:phpunit_tests_result_in_preview
     call s:OpenPreview(bufnr(t:phpunit_bufname))
   else
@@ -246,18 +242,35 @@ fun! s:OpenTestsResults()
 endfun
 
 fun! s:OpenPreview(bufnr)
-  silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' pedit #' . a:bufnr
+  pclose " a trick to force the cursor to be placed on the last line of the buffer
+  silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' pedit + #' . a:bufnr
 
-  wincmd p " Go to the preview window
+  wincmd P " Go to the preview window
   setlocal nobuflisted
   call s:ResizeTestsResultsWidow()
   wincmd p " Go back to the user window
 endfun
 
 fun! s:OpenWindow(bufnr)
-  silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' sb ' . a:bufnr
+  if exists('t:phpunit_winid') && win_id2win(t:phpunit_winid)
+    silent execute win_id2win(t:phpunit_winid) .'wincmd w'
+  else
+    silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' split'
+    let t:phpunit_winid = win_getid()
 
-  call s:ResizeTestsResultsWidow()
+    call s:ResizeTestsResultsWidow()
+  endif
+
+  setlocal nobuflisted
+
+  if a:bufnr != winbufnr(t:phpunit_winid)
+    silent execute ':edit + #' . a:bufnr
+    call s:Debug(' * execute :edit + #' . a:bufnr)
+  " If the buffer as more line than the window can show
+  elseif len(getbufline(bufnr('%'), 1, '$')) > winheight('%')
+    $ " Go to the last line
+    redraw " Need to redraw the window
+  endif
 
   wincmd p
 endfun
