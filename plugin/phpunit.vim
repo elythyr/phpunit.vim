@@ -5,8 +5,8 @@
 " TODO: add genereation of testcase, use ultisnip ?
 "
 
-if !exists('s:phpunit_bufname')
-  let s:phpunit_bufname = 'PHPUnit'
+if !exists('s:phpunit_bufname_format')
+  let s:phpunit_bufname_format = 'PHPUnit - %s'
 endif
 
 if !exists('g:phpunit_tests_result_in_preview')
@@ -147,7 +147,7 @@ fun! s:GetSrcFileFor(file)
   endif
 
   let l:src_file = substitute(fnamemodify(a:file, ':p'), g:phpunit_testroot, g:phpunit_srcroot, '')
-    return substitute(l:src_file, '\M' . g:phpunit_test_file_ends_with . '$', '.php', '')
+  return substitute(l:src_file, '\M' . g:phpunit_test_file_ends_with . '$', '.php', '')
 endfun
 
 fun! s:GetTestFileFor(file)
@@ -156,7 +156,7 @@ fun! s:GetTestFileFor(file)
   endif
 
   let l:test_file = substitute(fnamemodify(a:file, ':p'), g:phpunit_srcroot, g:phpunit_testroot, '')
-    return fnamemodify(l:test_file, ':r') . g:phpunit_test_file_ends_with
+  return fnamemodify(l:test_file, ':r') . g:phpunit_test_file_ends_with
 endfun
 
 fun! s:GetCurrentSrcFile()
@@ -182,10 +182,11 @@ fun! s:BuildBaseCommand()
 endfun
 
 fun! s:Run(cmd, title)
+  let t:phpunit_bufname = printf(s:phpunit_bufname_format, a:title)
   call s:DebugTitle(printf('Running PHP Unit test(s) [%s]', a:title))
   call s:Debug(' * Using the command : ' . join(a:cmd, ' '))
 
-  call s:ExecuteInBuffer(join(a:cmd, ' '), bufnr(s:phpunit_bufname, 1))
+  call s:ExecuteInBuffer(join(a:cmd, ' '), bufnr(t:phpunit_bufname, 1))
 
   call s:OpenTestsResults()
 
@@ -233,14 +234,14 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
 endfun
 
 fun! s:OpenTestsResults()
-  if -1 != bufwinnr(s:phpunit_bufname)
+  if -1 != bufwinnr(t:phpunit_bufname)
     return
   endif
 
   if g:phpunit_tests_result_in_preview
-    call s:OpenPreview(bufnr(s:phpunit_bufname))
+    call s:OpenPreview(bufnr(t:phpunit_bufname))
   else
-    call s:OpenWindow(bufnr(s:phpunit_bufname))
+    call s:OpenWindow(bufnr(t:phpunit_bufname))
   endif
 endfun
 
