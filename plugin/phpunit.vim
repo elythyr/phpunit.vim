@@ -92,10 +92,7 @@ endfun
 fun! g:PHPUnit.RunCurrentFile()
   let cmd = s:BuildBaseCommand()
 
-  let l:test_file = expand('%:p')
-  if !s:IsATestFile(l:test_file)
-    let l:test_file = s:GetTestFile(l:test_file)
-  endif
+  let l:test_file = s:GetCurrentTestFile()
 
   if empty(glob(l:test_file))
     echoerr printf('The test file "%s" does not exists', l:test_file)
@@ -116,9 +113,9 @@ fun! g:PHPUnit.SwitchFile()
   let l:file_to_open = ''
 
   if s:IsATestFile(expand('%'))
-    let l:file_to_open = s:GetSrcFile(expand('%:p'))
+    let l:file_to_open = s:GetCurrentSrcFile()
   else
-    let l:file_to_open = s:GetTestFile(expand('%:p'))
+    let l:file_to_open = s:GetCurrentTestFile()
   endif
 
   if !filereadable(l:file_to_open)
@@ -144,14 +141,30 @@ command! -nargs=1 -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTe
 command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
 
-fun! s:GetSrcFile(test_file)
-    let l:src_file = substitute(a:test_file, g:phpunit_testroot, g:phpunit_srcroot, '')
+fun! s:GetSrcFileFor(file)
+  if !s:IsATestFile(a:file)
+    return fnamemodify(a:file, ':p')
+  endif
+
+  let l:src_file = substitute(fnamemodify(a:file, ':p'), g:phpunit_testroot, g:phpunit_srcroot, '')
     return substitute(l:src_file, '\M' . g:phpunit_test_file_ends_with . '$', '.php', '')
 endfun
 
-fun! s:GetTestFile(src_file)
-    let l:test_file = substitute(a:src_file, g:phpunit_srcroot, g:phpunit_testroot, '')
+fun! s:GetTestFileFor(file)
+  if s:IsATestFile(a:file)
+    return fnamemodify(a:file, ':p')
+  endif
+
+  let l:test_file = substitute(fnamemodify(a:file, ':p'), g:phpunit_srcroot, g:phpunit_testroot, '')
     return fnamemodify(l:test_file, ':r') . g:phpunit_test_file_ends_with
+endfun
+
+fun! s:GetCurrentSrcFile()
+  return s:GetSrcFileFor(expand('%:p'))
+endfun
+
+fun! s:GetCurrentTestFile()
+  return s:GetTestFileFor(expand('%:p'))
 endfun
 
 fun! s:IsATestFile(filename)
