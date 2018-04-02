@@ -21,6 +21,10 @@ if !exists('g:phpunit_tests_result_position')
   endif
 endif
 
+if !exists('g:phpunit_swith_file_position')
+  let g:phpunit_swith_file_position = ['vertical', 'rightbelow']
+endif
+
 " Forced to declare it here because it needs to be available when the script
 " is loaded
 fun! s:OpenTestsResultsVerticaly()
@@ -145,7 +149,7 @@ fun! g:PHPUnit.SwitchFile()
   if -1 != l:file_window
     execute l:file_window . 'wincmd w'
   else
-    execute 'split ' . l:file_to_open
+    execute join(g:phpunit_swith_file_position, ' ') . ' split ' . l:file_to_open
   endif
 endfun
 
