@@ -144,9 +144,17 @@ fun! g:PHPUnit.SwitchFile()
     let l:file_to_open = s:GetCurrentTestFile()
   endif
 
-  if !filereadable(l:file_to_open)
-    call s:Error(printf('The file "%s" does not exists or is not readable', l:file_to_open))
-    return
+  if empty(glob(l:file_to_open))
+    if 'y' == input('The file does not exists, create it ? (y/n) ')
+      let l:file_path = fnamemodify(l:file_to_open, ':h')
+
+      if !isdirectory(l:file_path)
+        call mkdir(l:file_path, 'p')
+        call s:Debug('Creates the directory : ' . l:file_path)
+      endif
+    else
+      return
+    endif
   endif
 
   let l:file_window = bufwinnr(l:file_to_open)
