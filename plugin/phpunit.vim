@@ -144,28 +144,38 @@ fun! g:PHPUnit.SwitchFile()
     let l:file_to_open = s:GetCurrentTestFile()
   endif
 
-  if empty(glob(l:file_to_open))
-    if 'y' == input('The file does not exists, create it ? (y/n) ')
-      let l:file_path = fnamemodify(l:file_to_open, ':h')
-
-      if !isdirectory(l:file_path)
-        call mkdir(l:file_path, 'p')
-        call s:Debug('Creates the directory : ' . l:file_path)
-      endif
-    else
-      return
-    endif
+  if empty(glob(l:file_to_open)) && !s:CreateFile(l:file_to_open)
+    return
   endif
 
-  let l:file_window = bufwinnr(l:file_to_open)
+  call s:OpenFile(l:file_to_open)
+endfun
+
+
+fun! s:CreateFile(file, ...)
+  if 'y' != input('The file does not exists, create it ? (y/n) ')
+    return
+  endif
+
+  let l:file_path = fnamemodify(a:file, ':h')
+
+  if !isdirectory(l:file_path)
+    call mkdir(l:file_path, 'p')
+    call s:Debug('Creates the directory : ' . l:file_path)
+  endif
+
+  return 1
+endfun
+
+fun! s:OpenFile(file)
+  let l:file_window = bufwinnr(a:file)
 
   if -1 != l:file_window
     execute l:file_window . 'wincmd w'
   else
-    execute join(g:phpunit_swith_file_position, ' ') . ' split ' . l:file_to_open
+    execute join(g:phpunit_swith_file_position, ' ') . ' split ' . a:file
   endif
 endfun
-
 
 fun! s:GetSrcFileFor(file)
   if !s:IsATestFile(a:file)
