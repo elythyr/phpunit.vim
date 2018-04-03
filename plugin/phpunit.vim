@@ -207,10 +207,6 @@ fun! s:Run(cmd, title)
   call s:ExecuteInBuffer(join(a:cmd, ' '), l:results_bufnr)
 
   call s:OpenTestsResults(l:results_bufnr)
-
-  if s:IsDebugActivated()
-    redraw! " Need to redraw if we print some output
-  endif
 endfun
 
 fun! s:ExecuteInBuffer(cmd, bufnr)
