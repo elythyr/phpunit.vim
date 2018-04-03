@@ -5,9 +5,7 @@
 " TODO: add genereation of testcase, use ultisnip ?
 "
 
-if !exists('s:phpunit_bufname_format')
-  let s:phpunit_bufname_format = 'PHPUnit-%s'
-endif
+let s:phpunit_bufname_format = 'PHPUnit-%s'
 
 if !exists('g:phpunit_tests_result_in_preview')
   let g:phpunit_tests_result_in_preview = 0
