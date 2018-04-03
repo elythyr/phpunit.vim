@@ -121,6 +121,7 @@ fun! g:PHPUnit.RunCurrentFile()
   let l:test_file = s:GetCurrentTestFile()
 
   if empty(glob(l:test_file))
+    call s:Error(printf('The test file "%s" does not exists', l:test_file))
     return
   endif
 
@@ -144,7 +145,7 @@ fun! g:PHPUnit.SwitchFile()
   endif
 
   if !filereadable(l:file_to_open)
-    echoerr printf('The file "%s" is not readable', l:file_to_open)
+    call s:Error(printf('The file "%s" does not exists or is not readable', l:file_to_open))
     return
   endif
 
@@ -202,7 +203,7 @@ fun! s:Run(cmd, title)
   let l:results_bufnr = bufnr(printf(s:phpunit_bufname_format, a:title), 1)
 
   call s:DebugTitle(printf('Running PHP Unit test(s) [%s]', a:title))
-  call s:Debug(' * Using the command : ' . join(a:cmd, ' '))
+  call s:Debug('Using the command : ' . join(a:cmd, ' '))
 
   call s:ExecuteInBuffer(join(a:cmd, ' '), l:results_bufnr)
 
@@ -211,7 +212,7 @@ endfun
 
 fun! s:ExecuteInBuffer(cmd, bufnr)
   silent execute ':buffer ' . a:bufnr
-  call s:Debug(' * Switched to buffer #' . a:bufnr)
+  call s:Debug('Switched to buffer #' . a:bufnr)
 
   " nocursorline is needed for some colorscheme with CursorLine which change ctermbg
   " I don't know why but if the type of the buffer is nofile then whe have an
@@ -235,16 +236,16 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
     \ buftype=nowrite
 
   silent %delete " Delete the content of the buffer
-  call s:Debug(' * Content deleted')
+  call s:Debug('Content deleted')
 
   " Execute the commande and put the result in the buffer
   silent execute 'read !' . a:cmd
-  call s:Debug(printf(' * Command "%s" read into the buffer', a:cmd))
+  call s:Debug(printf('Command "%s" read into the buffer', a:cmd))
 
   setlocal nomodifiable
 
   silent buffer # " Go back to the original buffer
-  call s:Debug(' * Switched back to the previous buffer #' . bufnr('%'))
+  call s:Debug('Switched back to the previous buffer #' . bufnr('%'))
 endfun
 
 fun! s:OpenTestsResults(bufnr)
@@ -279,7 +280,7 @@ fun! s:OpenWindow(bufnr)
 
   if a:bufnr != winbufnr(t:phpunit_winid)
     silent execute ':edit + #' . a:bufnr
-    call s:Debug(' * execute :edit + #' . a:bufnr)
+    call s:Debug('execute :edit + #' . a:bufnr)
   " If the buffer as more line than the window can show
   elseif len(getbufline(bufnr('%'), 1, '$')) > winheight('%')
     $ " Go to the last line
@@ -299,15 +300,23 @@ fun! s:ResizeTestsResultsWidow()
 endfun
 
 fun! s:DebugTitle(msg)
-  echohl Question
-  call s:Debug('PHPUnit - ' . a:msg)
-  echohl none
+  call s:EchoMsg('Question', 'PHPUnit - ' . a:msg)
 endfun
 
 fun! s:Debug(msg)
+  call s:EchoMsg('none', ' * ' . a:msg)
+endfun
+
+fun! s:Error(msg)
+  call s:EchoMsg('ErrorMsg', ' * ' . a:msg)
+endfun
+
+fun! s:EchoMsg(group_name, msg)
   if s:IsDebugActivated()
+    execute 'echohl ' . a:group_name
     silent! redraw
     echomsg a:msg
+    echohl none
   endif
 endfun
 
