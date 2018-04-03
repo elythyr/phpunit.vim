@@ -25,6 +25,12 @@ if !exists('g:phpunit_swith_file_position')
   let g:phpunit_swith_file_position = ['vertical', 'rightbelow']
 endif
 
+if get(g:, 'phpunit_swith_file_to_new_window', 1)
+  let g:phpunit_swith_file_cmd = join(g:phpunit_swith_file_position, ' ') . ' split'
+else
+  let g:phpunit_swith_file_cmd = 'edit'
+endif
+
 " Forced to declare it here because it needs to be available when the script
 " is loaded
 fun! s:OpenTestsResultsVerticaly()
@@ -173,7 +179,7 @@ fun! s:OpenFile(file)
   if -1 != l:file_window
     execute l:file_window . 'wincmd w'
   else
-    execute join(g:phpunit_swith_file_position, ' ') . ' split ' . a:file
+    execute g:phpunit_swith_file_cmd a:file
   endif
 endfun
 
