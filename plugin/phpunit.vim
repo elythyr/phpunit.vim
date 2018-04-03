@@ -199,13 +199,14 @@ fun! s:BuildBaseCommand()
 endfun
 
 fun! s:Run(cmd, title)
-  let t:phpunit_bufname = printf(s:phpunit_bufname_format, a:title)
+  let l:results_bufnr = bufnr(printf(s:phpunit_bufname_format, a:title), 1)
+
   call s:DebugTitle(printf('Running PHP Unit test(s) [%s]', a:title))
   call s:Debug(' * Using the command : ' . join(a:cmd, ' '))
 
-  call s:ExecuteInBuffer(join(a:cmd, ' '), bufnr(t:phpunit_bufname, 1))
+  call s:ExecuteInBuffer(join(a:cmd, ' '), l:results_bufnr)
 
-  call s:OpenTestsResults()
+  call s:OpenTestsResults(l:results_bufnr)
 
   if s:IsDebugActivated()
     redraw! " Need to redraw if we print some output
@@ -250,11 +251,11 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
   call s:Debug(' * Switched back to the previous buffer #' . bufnr('%'))
 endfun
 
-fun! s:OpenTestsResults()
+fun! s:OpenTestsResults(bufnr)
   if g:phpunit_tests_result_in_preview
-    call s:OpenPreview(bufnr(t:phpunit_bufname))
+    call s:OpenPreview(a:bufnr)
   else
-    call s:OpenWindow(bufnr(t:phpunit_bufname))
+    call s:OpenWindow(a:bufnr)
   endif
 endfun
 
