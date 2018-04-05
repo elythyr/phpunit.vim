@@ -91,13 +91,13 @@ endif
 
 
 if !get(s:, 'mappings_already_created', 0)
-nnoremap <unique> <Plug>PhpunitRunall :PHPUnitRunAll<CR>
-nnoremap <unique> <Plug>PhpunitRuncurrentfile :PHPUnitRunCurrentFile<CR>
-nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
+  nnoremap <unique> <Plug>PhpunitRunall :PHPUnitRunAll<CR>
+  nnoremap <unique> <Plug>PhpunitRuncurrentfile :PHPUnitRunCurrentFile<CR>
+  nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
 
-nmap <Leader>ta <Plug>PhpunitRunall
-nmap <Leader>tf <Plug>PhpunitRuncurrentfile
-nmap <Leader>ts <Plug>PhpunitSwitchfile
+  nmap <Leader>ta <Plug>PhpunitRunall
+  nmap <Leader>tf <Plug>PhpunitRuncurrentfile
+  nmap <Leader>ts <Plug>PhpunitSwitchfile
 
   let s:mappings_already_created = 1
 endif
@@ -109,25 +109,26 @@ augroup phpunit
   endif
 augroup END
 
-command! -nargs=0 PHPUnitRunAll :call g:PHPUnit.RunAll()
-command! -nargs=0 PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile()
+command! -nargs=? -complete=tag_listfiles PHPUnitRunAll :call g:PHPUnit.RunAll(<f-args>)
+command! -nargs=? -complete=tag_listfiles PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile(<f-args>)
 " TODO: use -complete=customlist,{func} => create a function to retrieve all the
 " tests functions of a test file - see :h E467
-command! -nargs=1 -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
+" The first argument must be the test to filter
+" The other ones are options to provide to phpunit
+command! -nargs=+ -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
 command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
 
 
 let g:PHPUnit = {}
 
-fun! g:PHPUnit.RunAll()
-  let cmd = s:BuildBaseCommand()
-  let cmd = cmd + [expand(g:phpunit_testroot)]
+fun! g:PHPUnit.RunAll(...)
+  let l:cmd = call('s:BuildBaseCommand', [expand(g:phpunit_testroot)] + a:000)
 
-  call s:Run(cmd, "RunAll")
+  call s:Run(l:cmd, "RunAll")
 endfun
 
-fun! g:PHPUnit.RunCurrentFile()
-  let cmd = s:BuildBaseCommand()
+fun! g:PHPUnit.RunCurrentFile(...)
+  let l:cmd = call('s:BuildBaseCommand', a:000)
 
   let l:test_file = s:GetCurrentTestFile()
 
@@ -136,14 +137,14 @@ fun! g:PHPUnit.RunCurrentFile()
     return
   endif
 
-  let cmd = cmd + [l:test_file]
-  call s:Run(cmd, fnamemodify(l:test_file, ':t:r'))
+  call add(l:cmd, l:test_file)
+  call s:Run(l:cmd, fnamemodify(l:test_file, ':t:r'))
 endfun
 
-fun! g:PHPUnit.RunTestCase(filter)
-  let cmd = s:BuildBaseCommand()
-  let cmd = cmd + ["--filter", a:filter , bufname("%")]
-  call s:Run(cmd, bufname("%") . ":" . a:filter)
+fun! g:PHPUnit.RunTestCase(filter, ...)
+  let l:cmd = call('s:BuildBaseCommand', ["--filter", a:filter] + a:000 + [bufname('%')])
+
+  call s:Run(l:cmd, bufname("%") . ":" . a:filter)
 endfun
 
 fun! g:PHPUnit.SwitchFile()
@@ -218,14 +219,30 @@ fun! s:IsATestFile(filename)
   return a:filename =~ '\M' . g:phpunit_test_file_ends_with . '$'
 endfun!
 
-fun! s:BuildBaseCommand()
-  let cmd = []
-  if g:php_bin != ""
-    call add(cmd, g:php_bin)
+fun! s:BuildBaseCommand(...)
+  let l:cmd = []
+
+  if !empty(g:php_bin)
+    call add(l:cmd, g:php_bin)
   endif
-  call add(cmd, g:phpunit_bin)
-  call add(cmd, join(g:phpunit_options, " "))
-  return cmd
+
+  call add(l:cmd, g:phpunit_bin)
+  call extend(l:cmd, g:phpunit_options)
+  call s:AddOptionsTo(l:cmd, a:000)
+
+  return l:cmd
+endfun
+
+fun! s:AddOptionsTo(cmd, ...)
+  if a:0
+    if type(a:1) == v:t_list
+      call extend(a:cmd, a:1)
+    else
+      call add(a:cmd, a:1)
+    endif
+  endif
+
+  return a:cmd
 endfun
 
 fun! s:Run(cmd, title)
