@@ -87,6 +87,7 @@ if !exists('g:phpunit_tests')
 endif
 
 
+if !get(s:, 'mappings_already_created', 0)
 nnoremap <unique> <Plug>PhpunitRunall :PHPUnitRunAll<CR>
 nnoremap <unique> <Plug>PhpunitRuncurrentfile :PHPUnitRunCurrentFile<CR>
 nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
@@ -94,6 +95,9 @@ nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
 nmap <Leader>ta <Plug>PhpunitRunall
 nmap <Leader>tf <Plug>PhpunitRuncurrentfile
 nmap <Leader>ts <Plug>PhpunitSwitchfile
+
+  let s:mappings_already_created = 1
+endif
 
 augroup phpunit
   autocmd!
