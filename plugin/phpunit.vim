@@ -5,7 +5,10 @@
 " TODO: add genereation of testcase, use ultisnip ?
 "
 
-let s:phpunit_bufname_format = 'PHPUnit-%s'
+let s:bufname_format = 'PHPUnit-%s'
+let s:no_colors_option = '--colors=never'
+let s:colored_phpunit_filetype = 'phpunit'
+let s:not_colored_phpunit_filetype = 'phpunit_not_colored'
 
 if !exists('g:phpunit_tests_result_in_preview')
   let g:phpunit_tests_result_in_preview = 0
@@ -226,7 +229,7 @@ fun! s:BuildBaseCommand()
 endfun
 
 fun! s:Run(cmd, title)
-  let l:results_bufnr = bufnr(printf(s:phpunit_bufname_format, a:title), 1)
+  let l:results_bufnr = bufnr(printf(s:bufname_format, a:title), 1)
 
   call s:DebugTitle(printf('Running PHP Unit test(s) [%s]', a:title))
   call s:Debug('Using the command : ' . join(a:cmd, ' '))
@@ -255,11 +258,11 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
     \ nocursorline
     \ nonumber
     \ nowrap
-    \ filetype=phpunit
     \ nobuflisted
     \ bufhidden=hide
     \ noswapfile
     \ buftype=nowrite
+  execute ':setlocal filetype=' . s:GetFiletype(a:cmd)
 
   silent %delete " Delete the content of the buffer
   call s:Debug('Content deleted')
@@ -323,6 +326,12 @@ fun! s:ResizeTestsResultsWidow()
   endif
 
   execute l:cmd . 'resize ' . g:phpunit_window_size
+endfun
+
+fun! s:GetFiletype(cmd)
+  return a:cmd =~# s:no_colors_option ?
+    \ s:not_colored_phpunit_filetype :
+    \ s:colored_phpunit_filetype
 endfun
 
 fun! s:DebugTitle(msg)
