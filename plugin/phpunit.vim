@@ -73,10 +73,12 @@ endif
 
 if !exists('g:phpunit_options')
   let g:phpunit_options = ['--stop-on-failure']
+elseif !get(g:, 'disable_stop_on_failure', 0)
+  call add(g:phpunit_options, '--stop-on-failure')
+endif
 
   if s:OpenTestsResultsVerticaly()
-    let g:phpunit_options = ['--columns=' . g:phpunit_window_size]
-  endif
+  call add (g:phpunit_options, '--columns=' . g:phpunit_window_size)
 endif
 
 if !exists('g:phpunit_launch_test_on_save')
