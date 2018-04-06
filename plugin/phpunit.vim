@@ -6,9 +6,13 @@
 "
 
 let s:bufname_format = 'PHPUnit-%s'
+let s:auto_colors_option_pattern = '\v^--colors%(\=auto)?$' " Represents --colors and --colors=auto
+let s:activate_colors_option_pattern = '\v^--colors%(\=%(auto|always))?$' " Represents --colors and --colors=auto and --colors=always
+" We must force the colors, otherwise phpunit detects that we can not handle
+" ANSI colors and disable them
+let s:force_colors_options = '--colors=always'
 let s:no_colors_option = '--colors=never'
-let s:colored_phpunit_filetype = 'phpunit'
-let s:not_colored_phpunit_filetype = 'phpunit_not_colored'
+let s:phpunit_filetype = 'phpunit'
 
 if !exists('g:phpunit_tests_result_in_preview')
   let g:phpunit_tests_result_in_preview = 0
@@ -77,12 +81,12 @@ elseif !get(g:, 'disable_stop_on_failure', 0)
   call add(g:phpunit_options, '--stop-on-failure')
 endif
 
-  if s:OpenTestsResultsVerticaly()
+if s:OpenTestsResultsVerticaly()
   call add (g:phpunit_options, '--columns=' . g:phpunit_window_size)
 endif
 
-if !exists('g:phpunit_launch_test_on_save')
-  let g:phpunit_launch_test_on_save = 0
+if !exists('g:phpunit_run_test_on_save')
+  let g:phpunit_run_test_on_save = 0
 endif
 
 " you can set there subset of tests if you do not want to run
@@ -106,7 +110,7 @@ endif
 
 augroup phpunit
   autocmd!
-  if g:phpunit_launch_test_on_save
+  if g:phpunit_run_test_on_save
     autocmd BufWritePost *.php :PHPUnitRunCurrentFile
   endif
 augroup END
@@ -236,12 +240,10 @@ fun! s:BuildBaseCommand(...)
 endfun
 
 fun! s:AddOptionsTo(cmd, ...)
-  if a:0
-    if type(a:1) == v:t_list
+  if a:0 && type(a:1) == v:t_list
       call extend(a:cmd, a:1)
-    else
-      call add(a:cmd, a:1)
-    endif
+  elseif a:0
+    call add(a:cmd, a:1)
   endif
 
   return a:cmd
@@ -251,9 +253,8 @@ fun! s:Run(cmd, title)
   let l:results_bufnr = bufnr(printf(s:bufname_format, a:title), 1)
 
   call s:DebugTitle(printf('Running PHP Unit test(s) [%s]', a:title))
-  call s:Debug('Using the command : ' . join(a:cmd, ' '))
 
-  call s:ExecuteInBuffer(join(a:cmd, ' '), l:results_bufnr)
+  call s:ExecuteInBuffer(a:cmd, l:results_bufnr)
 
   call s:OpenTestsResults(l:results_bufnr)
 endfun
@@ -281,15 +282,18 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
     \ bufhidden=hide
     \ noswapfile
     \ buftype=nowrite
-  execute ':setlocal filetype=' . s:GetFiletype(a:cmd)
 
   silent %delete " Delete the content of the buffer
   call s:Debug('Content deleted')
 
-  " Execute the commande and put the result in the buffer
-  silent execute 'read !' . a:cmd
-  call s:Debug(printf('Command "%s" read into the buffer', a:cmd))
+  call s:HandleColorsOption(a:cmd)
+  call s:SetColorsActivated(a:cmd)
 
+  " Execute the commande and put the result in the buffer
+  silent execute 'read !' . join(a:cmd, ' ')
+  call s:Debug(printf('Command "%s" read into the buffer', join(a:cmd, ' ')))
+
+  call s:ColorizeResults()
   setlocal nomodifiable
 
   silent buffer # " Go back to the original buffer
@@ -347,10 +351,53 @@ fun! s:ResizeTestsResultsWidow()
   execute l:cmd . 'resize ' . g:phpunit_window_size
 endfun
 
-fun! s:GetFiletype(cmd)
-  return a:cmd =~# s:no_colors_option ?
-    \ s:not_colored_phpunit_filetype :
-    \ s:colored_phpunit_filetype
+fun! s:HandleColorsOption(cmd)
+  call map(a:cmd, function('s:ConvertAutoColorsOption'))
+endfun
+
+fun! s:ConvertAutoColorsOption(index, option)
+  if s:CanUseAnsiColors() && a:option =~# s:auto_colors_option_pattern
+    call s:Debug('Forces the coloration')
+    return s:force_colors_options
+  endif
+
+  return a:option
+endfun
+
+fun! s:SetColorsActivated(cmd)
+  let s:colors_are_activated = s:AreColorsActivated(a:cmd) ? 1 : 0
+endfun
+
+fun! s:AreColorsActivated(cmd)
+  for l:option in a:cmd
+    if l:option =~# s:activate_colors_option_pattern
+      return 1
+    endif
+  endfor
+
+  return 0
+endfun
+
+fun! s:ColorizeResults()
+  if !s:colors_are_activated
+    return
+  endif
+
+  if s:CanUseAnsiColors()
+    call s:Debug('Colorize with ANSI colors')
+    call s:TranslateAnsiColosForTheBuffer()
+  else
+    call s:Debug('Colorize using filetype')
+    execute ':setlocal filetype=' . s:phpunit_filetype
+  endif
+endfun
+
+fun! s:CanUseAnsiColors()
+  return 2 == exists(':AnsiEsc')
+endfun
+
+func! s:TranslateAnsiColosForTheBuffer()
+  AnsiEsc
 endfun
 
 fun! s:DebugTitle(msg)
