@@ -14,109 +14,6 @@ let s:force_colors_options = '--colors=always'
 let s:no_colors_option = '--colors=never'
 let s:phpunit_filetype = 'phpunit'
 
-if !exists('g:phpunit_tests_result_in_preview')
-  let g:phpunit_tests_result_in_preview = 0
-endif
-
-if !exists('g:phpunit_tests_result_position')
-  if g:phpunit_tests_result_in_preview
-    let g:phpunit_tests_result_position = ['botright']
-  else
-    let g:phpunit_tests_result_position = ['vertical', 'rightbelow']
-  endif
-endif
-
-if !exists('g:phpunit_swith_file_position')
-  let g:phpunit_swith_file_position = ['vertical', 'rightbelow']
-endif
-
-if get(g:, 'phpunit_swith_file_to_new_window', 1)
-  let g:phpunit_swith_file_cmd = join(g:phpunit_swith_file_position, ' ') . ' split'
-else
-  let g:phpunit_swith_file_cmd = 'edit'
-endif
-
-" Forced to declare it here because it needs to be available when the script
-" is loaded
-fun! s:OpenTestsResultsVerticaly()
-  return -1 != index(g:phpunit_tests_result_position, 'vertical')
-endfun
-
-if !exists('g:phpunit_window_size')
-  if s:OpenTestsResultsVerticaly()
-    let g:phpunit_window_size = 50 " Width
-  else
-    let g:phpunit_window_size = 12 " Height
-  endif
-endif
-
-" root of unit tests
-if !exists('g:phpunit_testroot')
-  let g:phpunit_testroot = fnamemodify(finddir('tests', '.;'), ':p:h')
-endif
-
-if !exists('g:phpunit_srcroot')
-  let g:phpunit_srcroot = fnamemodify(finddir('src', '.;'), ':p')
-elseif '.' == g:phpunit_srcroot
-  let g:phpunit_srcroot = fnamemodify(g:phpunit_testroot, ':h')
-else
-  let g:phpunit_srcroot = finddir(g:phpunit_srcroot, '.;')
-endif
-
-if !exists('g:phpunit_test_file_ends_with')
-  let g:phpunit_test_file_ends_with = 'Test.php'
-endif
-
-if !exists('g:php_bin')
-  let g:php_bin = ''
-endif
-
-if !exists('g:phpunit_bin')
-  let g:phpunit_bin = 'phpunit'
-endif
-
-if !exists('g:phpunit_options')
-  let g:phpunit_options = ['--stop-on-failure']
-elseif !get(g:, 'disable_stop_on_failure', 0)
-  call add(g:phpunit_options, '--stop-on-failure')
-endif
-
-call add(g:phpunit_options, printf('--include-path=%s', expand('<sfile>:p:h:h')))
-call add(g:phpunit_options, '--printer=SimpleJsonCounterPrinter')
-
-if s:OpenTestsResultsVerticaly()
-  call add (g:phpunit_options, '--columns=' . g:phpunit_window_size)
-endif
-
-if !exists('g:phpunit_run_test_on_save')
-  let g:phpunit_run_test_on_save = 0
-endif
-
-" you can set there subset of tests if you do not want to run
-" full set
-if !exists('g:phpunit_tests')
-  let g:phpunit_tests = g:phpunit_testroot
-endif
-
-
-if !get(s:, 'mappings_already_created', 0)
-  nnoremap <unique> <Plug>PhpunitRunall :PHPUnitRunAll<CR>
-  nnoremap <unique> <Plug>PhpunitRuncurrentfile :PHPUnitRunCurrentFile<CR>
-  nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
-
-  nmap <Leader>ta <Plug>PhpunitRunall
-  nmap <Leader>tf <Plug>PhpunitRuncurrentfile
-  nmap <Leader>ts <Plug>PhpunitSwitchfile
-
-  let s:mappings_already_created = 1
-endif
-
-augroup phpunit
-  autocmd!
-  if g:phpunit_run_test_on_save
-    autocmd BufWritePost *.php :PHPUnitRunCurrentFile
-  endif
-augroup END
 
 command! -nargs=? -complete=tag_listfiles PHPUnitRunAll :call g:PHPUnit.RunAll(<f-args>)
 command! -nargs=? -complete=tag_listfiles PHPUnitRunCurrentFile :call g:PHPUnit.RunCurrentFile(<f-args>)
@@ -126,6 +23,9 @@ command! -nargs=? -complete=tag_listfiles PHPUnitRunCurrentFile :call g:PHPUnit.
 " The other ones are options to provide to phpunit
 command! -nargs=+ -complete=tag_listfiles PHPUnitRunFilter :call g:PHPUnit.RunTestCase(<f-args>)
 command! -nargs=0 PHPUnitSwitchFile :call g:PHPUnit.SwitchFile()
+
+call phpunit#init#bootstrap()
+call phpunit#init#mappings()
 
 
 let g:PHPUnit = {}
@@ -350,7 +250,7 @@ endfun
 
 fun! s:ResizeTestsResultsWidow()
   let l:cmd = ':'
-  if s:OpenTestsResultsVerticaly()
+  if phpunit#are_tests_opened_verticaly()
     let l:cmd .= 'vertical '
   endif
 
