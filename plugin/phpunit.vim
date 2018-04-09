@@ -81,6 +81,9 @@ elseif !get(g:, 'disable_stop_on_failure', 0)
   call add(g:phpunit_options, '--stop-on-failure')
 endif
 
+call add(g:phpunit_options, printf('--include-path=%s', expand('<sfile>:p:h:h')))
+call add(g:phpunit_options, '--printer=SimpleJsonCounterPrinter')
+
 if s:OpenTestsResultsVerticaly()
   call add (g:phpunit_options, '--columns=' . g:phpunit_window_size)
 endif
@@ -292,6 +295,9 @@ fun! s:ExecuteInBuffer(cmd, bufnr)
   " Execute the commande and put the result in the buffer
   silent execute 'read !' . join(a:cmd, ' ')
   call s:Debug(printf('Command "%s" read into the buffer', join(a:cmd, ' ')))
+
+  silent $d " Cut the last line, with the JSON results
+  let w:phpunit_results = json_decode(@") " Decode the JSON results
 
   call s:ColorizeResults()
   setlocal nomodifiable
