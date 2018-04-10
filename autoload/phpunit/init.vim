@@ -4,8 +4,9 @@ function! phpunit#init#bootstrap()
   endif
 
   call s:CheckedOptions('php_bin', '')
+  call s:CheckedOptions('php_ext_pattern', '\.p%(hp[3457]?|html)')
   call s:CheckedOptions('phpunit_bin', 'phpunit')
-  call s:CheckedOptions('phpunit_test_file_ends_with', 'Test.php')
+  call s:CheckedOptions('phpunit_test_file_suffix', 'Test')
   " TODO: change the options for tests and src directories
   " The user should be able to define a global name for tests and src dir
   " These variables will be used to define the path of for tests and src
