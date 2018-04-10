@@ -1,35 +1,35 @@
-fun! phpunit#files#is_test(filename)
+function! phpunit#files#is_test(filename)
   return a:filename =~# printf('\v%s%s$', g:phpunit_test_file_suffix, g:php_ext_pattern)
-endfun!
+endfunction!
 
-fun! phpunit#files#src(file)
+function! phpunit#files#src(file)
   if !phpunit#files#is_test(a:file)
     return fnamemodify(a:file, ':p')
   endif
 
-  let l:src_file = substitute(fnamemodify(a:file, ':p'), g:phpunit_testroot, g:phpunit_srcroot, '')
+  let l:src_file = substitute(fnamemodify(a:file, ':p'), phpunit#files#tests_path(), phpunit#files#src_path(), '')
   return substitute(
     \ l:src_file,
     \ printf('\v%s(%s)$', g:phpunit_test_file_suffix, g:php_ext_pattern),
     \ '\1',
     \ ''
   \ )
-endfun
+endfunction
 
-fun! phpunit#files#test(file)
+function! phpunit#files#test(file)
   if phpunit#files#is_test(a:file)
     return fnamemodify(a:file, ':p')
   endif
 
-  let l:test_file = substitute(fnamemodify(a:file, ':p'), g:phpunit_srcroot, g:phpunit_testroot, '')
+  let l:test_file = substitute(fnamemodify(a:file, ':p'), phpunit#files#src_path(), phpunit#files#tests_path(), '')
   return printf(
     \ '%s.%s',
     \ fnamemodify(l:test_file, ':r') . g:phpunit_test_file_suffix,
     \ fnamemodify(l:test_file, ':e')
   \ )
-endfun
+endfunction
 
-fun! phpunit#files#switch()
+function! phpunit#files#switch()
   let l:file_to_open = expand('%')
 
   if phpunit#files#is_test(l:file_to_open)
@@ -47,18 +47,18 @@ fun! phpunit#files#switch()
   endif
 
   call phpunit#files#open(l:file_to_open)
-endfun
+endfunction
 
-fun! phpunit#files#create(file)
+function! phpunit#files#create(file)
   let l:file_path = fnamemodify(a:file, ':h')
 
   if !isdirectory(l:file_path)
     call mkdir(l:file_path, 'p')
     call phpunit#messages#debug('Creates the directory : ' . l:file_path)
   endif
-endfun
+endfunction
 
-fun! phpunit#files#open(file)
+function! phpunit#files#open(file)
   let l:file_window = bufwinnr(a:file)
 
   if -1 != l:file_window
@@ -66,4 +66,24 @@ fun! phpunit#files#open(file)
   else
     execute g:phpunit_swith_file_cmd a:file
   endif
-endfun
+endfunction
+
+function! phpunit#files#tests_path()
+  if !exists('b:phpunit_tests_path')
+    let b:phpunit_tests_path = fnamemodify(resolve(finddir(g:phpunit_tests_dir, '.;')), ':p:h')
+  endif
+
+  return b:phpunit_tests_path
+endfunction
+
+function! phpunit#files#src_path()
+  if !exists('b:phpunit_src_path')
+    if '.' == g:phpunit_src_dir
+      let b:phpunit_src_path = fnamemodify(phpunit#files#tests_path(), ':h')
+    else
+      let b:phpunit_src_path = fnamemodify(resolve(finddir(g:phpunit_src_dir, '.;')), ':p')
+    endif
+  endif
+
+  return b:phpunit_src_path
+endfunction
