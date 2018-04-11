@@ -83,6 +83,14 @@ function! phpunit#windows#resize()
   execute l:cmd . 'resize ' . g:phpunit_window_size
 endfunction
 
+function! phpunit#windows#close()
+  if !phpunit#windows#opened()
+    return
+  endif
+
+  execute phpunit#windows#nr() 'wincmd c'
+endfunction
+
 function! s:SetWinid(winid)
   " TODO: see WinLeave event for handling when the window is closed
   let t:phpunit_winid = a:winid

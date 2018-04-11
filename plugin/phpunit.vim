@@ -8,6 +8,7 @@ command! -nargs=? -complete=tag_listfiles PHPUnitRunCurrentFile :call phpunit#ru
 " The other ones are options to provide to phpunit
 command! -nargs=+ -complete=tag_listfiles PHPUnitRunFilter :call phpunit#run_testcase(<f-args>) | :call phpunit#windows#open(expand('%'))
 command! -nargs=0 PHPUnitSwitchFile :call phpunit#files#switch()
+command! -nargs=0 PHPUnitClose :call phpunit#windows#close()
 
 call phpunit#init#bootstrap()
 call phpunit#init#mappings()

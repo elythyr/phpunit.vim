@@ -31,10 +31,12 @@ function! phpunit#init#mappings()
   nnoremap <unique> <Plug>PhpunitRunall :PHPUnitRunAll<CR>
   nnoremap <unique> <Plug>PhpunitRuncurrentfile :PHPUnitRunCurrentFile<CR>
   nnoremap <unique> <Plug>PhpunitSwitchfile :PHPUnitSwitchFile<CR>
+  nnoremap <unique> <Plug>PhpunitClose :PHPUnitClose<CR>
 
   nmap <Leader>ta <Plug>PhpunitRunall
   nmap <Leader>tf <Plug>PhpunitRuncurrentfile
   nmap <Leader>ts <Plug>PhpunitSwitchfile
+  nmap <Leader>tc <Plug>PhpunitClose
 
   let s:mapped = 1
 endfunction
