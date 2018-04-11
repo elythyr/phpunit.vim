@@ -95,7 +95,8 @@ function! airline#extensions#phpunit#apply(...)
 
   call s:ChangeColors()
 
-  let l:content = s:spc . g:airline_right_sep . s:spc .
+  let l:section_sep = get(g:, 'airline#extensions#phpunit#section_sep', g:airline_right_sep)
+  let l:content = s:spc . l:section_sep . s:spc .
     \airline#section#create_left(s:OrderedPartsNames())
   call airline#extensions#append_to_section('z', l:content)
 endfunction
