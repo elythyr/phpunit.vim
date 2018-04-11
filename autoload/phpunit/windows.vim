@@ -92,6 +92,5 @@ function! phpunit#windows#close()
 endfunction
 
 function! s:SetWinid(winid)
-  " TODO: see WinLeave event for handling when the window is closed
   let t:phpunit_winid = a:winid
 endfunction
