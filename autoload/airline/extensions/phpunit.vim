@@ -69,10 +69,10 @@ function airline#extensions#phpunit#run()
 endfunction
 
 function! airline#extensions#phpunit#init(ext)
-  command! -nargs=0 PHPUnitRunInStatisline call airline#extensions#phpunit#run()
+  command! -nargs=0 PHPUnitRunInStatusline call airline#extensions#phpunit#run()
   augroup AirlinePhpunit
     autocmd!
-    autocmd BufWritePost *.php PHPUnitRunInStatisline
+    autocmd BufWritePost *.php PHPUnitRunInStatusline
   augroup END
 
   " Declares all parts
