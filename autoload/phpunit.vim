@@ -5,7 +5,7 @@ function! phpunit#sfile()
 endfunction
 
 function! phpunit#are_tests_opened_verticaly()
-  return -1 != index(g:phpunit_tests_result_position, 'vertical')
+  return -1 != index(g:phpunit_tests_results_position, 'vertical')
 endfunction
 
 function! phpunit#run_dir(dir, ...)

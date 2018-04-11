@@ -17,7 +17,7 @@ endfunction
 
 function phpunit#windows#open(file)
   if !phpunit#windows#opened(a:file)
-    if g:phpunit_tests_result_in_preview
+    if g:phpunit_tests_results_in_preview
       call phpunit#windows#preview(a:file)
     else
       call phpunit#windows#normal(a:file)
@@ -31,7 +31,7 @@ endfunction
 
 function! phpunit#windows#preview(file)
   "pclose! " a trick to force the cursor to be placed on the last line of the buffer
-  silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' pedit + #' . phpunit#buffers#nr(a:file)
+  silent execute ':' . join(g:phpunit_tests_results_position, ' ') . ' pedit + #' . phpunit#buffers#nr(a:file)
 
   wincmd P " Go to the preview window
   call s:SetWinid(win_getid())
@@ -44,7 +44,7 @@ function! phpunit#windows#normal(file)
   if phpunit#windows#opened()
     silent execute phpunit#windows#nr() .'wincmd w'
   else
-    silent execute ':' . join(g:phpunit_tests_result_position, ' ') . ' split'
+    silent execute ':' . join(g:phpunit_tests_results_position, ' ') . ' split'
 
     call s:SetWinid(win_getid())
     call phpunit#windows#resize()

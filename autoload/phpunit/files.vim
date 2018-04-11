@@ -64,7 +64,10 @@ function! phpunit#files#open(file)
   if -1 != l:file_window
     execute l:file_window . 'wincmd w'
   else
-    execute g:phpunit_swith_file_cmd a:file
+    let l:cmd = g:phpunit_switch_file_to_new_window
+    \ ? join(g:phpunit_switch_file_position, ' ') . ' split'
+    \ : 'edit'
+    execute l:cmd a:file
   endif
 endfunction
 
