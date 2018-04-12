@@ -59,10 +59,9 @@ function! phpunit#run(file, ...)
     silent put = system(join(l:cmd, ' '))
     call phpunit#messages#debug(printf('Results of "%s" put into the buffer', join(l:cmd, ' ')))
 
-    silent $delete " Cut the last line, with the JSON results
-    let w:phpunit_results = json_decode(@") " Decode the JSON results
+    let w:phpunit_results = json_decode(getline('$')) " Decode the JSON results
+    silent $delete _ " Cut the last line, with the JSON results
   catch
-    silent put = @" " Put back the line of the error message
     let w:phpunit_results = {}
   finally
     setlocal nomodifiable
