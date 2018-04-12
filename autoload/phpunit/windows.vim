@@ -30,7 +30,6 @@ function phpunit#windows#open(file)
 endfunction
 
 function! phpunit#windows#preview(file)
-  "pclose! " a trick to force the cursor to be placed on the last line of the buffer
   silent execute ':' . join(g:phpunit_tests_results_position, ' ') . ' pedit + #' . phpunit#buffers#nr(a:file)
 
   wincmd P " Go to the preview window
