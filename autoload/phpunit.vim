@@ -20,8 +20,11 @@ endfunction
 function! phpunit#run_file(file, ...)
   let l:test_file = phpunit#files#test(a:file)
 
-  if !filereadable(l:test_file)
-    call phpunit#messages#error(printf('The test file "%s" does not exists or is not readable', l:test_file))
+  if empty(glob(l:test_file))
+    call phpunit#messages#debug(printf('The test file "%s" does not exist, abort', l:test_file))
+    return
+  elseif !filereadable(l:test_file)
+    call phpunit#messages#error(printf('The test file "%s" is not readable', l:test_file))
     return
   endif
 
