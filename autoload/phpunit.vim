@@ -57,7 +57,7 @@ function! phpunit#run(file, ...)
 
   setlocal modifiable
 
-  silent %delete
+  silent keepjumps %delete
   call phpunit#messages#debug('Content deleted')
 
   try
@@ -65,13 +65,13 @@ function! phpunit#run(file, ...)
     call phpunit#messages#debug(printf('Results of "%s" put into the buffer', join(l:cmd, ' ')))
 
     let w:phpunit_results = json_decode(getline('$')) " Decode the JSON results
-    silent $delete _ " Cut the last line, with the JSON results
+    silent keepjumps $delete _ " Cut the last line, with the JSON results
   catch
     let w:phpunit_results = {}
   finally
     setlocal nomodifiable
 
-    silent buffer # " Go back to the original buffer
+    silent keepjumps buffer # " Go back to the original buffer
     call winrestview(l:saved_view)
     call phpunit#messages#debug(printf('Switched back to the previous buffer %s (#%d)', bufname('%'), bufnr('%')))
   endtry
