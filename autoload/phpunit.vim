@@ -36,6 +36,8 @@ function! phpunit#run_testcase(testcase, ...)
 endfunction
 
 function! phpunit#run(file, ...)
+  let l:saved_view = winsaveview()
+
   call phpunit#messages#title('Running PHP Unit test(s) for ' . a:file)
 
   let l:cmd = call('s:BuildCmd', a:000 + [a:file])
@@ -70,6 +72,7 @@ function! phpunit#run(file, ...)
     setlocal nomodifiable
 
     silent buffer # " Go back to the original buffer
+    call winrestview(l:saved_view)
     call phpunit#messages#debug(printf('Switched back to the previous buffer %s (#%d)', bufname('%'), bufnr('%')))
   endtry
 endfunction
