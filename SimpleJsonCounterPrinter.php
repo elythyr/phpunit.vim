@@ -17,7 +17,7 @@ class SimpleJsonCounterPrinter extends ResultPrinter implements TestListener
     /**
      * @param TestResult $result
      */
-    public function printResult(TestResult $result): void
+    public function printResult(TestResult $result)
     {
         parent::printResult($result);
 
@@ -27,7 +27,7 @@ class SimpleJsonCounterPrinter extends ResultPrinter implements TestListener
     /**
      * @param TestResult $result
      */
-    protected function printJson(TestResult $result): void
+    protected function printJson(TestResult $result)
     {
         $this->writeNewObject();
         $this->writeObjectComponent('tests',      \count($result), true);
@@ -42,12 +42,12 @@ class SimpleJsonCounterPrinter extends ResultPrinter implements TestListener
         $this->write(PHP_EOL);
     }
 
-    protected function writeNewObject(): void
+    protected function writeNewObject()
     {
         $this->write('{');
     }
 
-    protected function writeEndOfObject(): void
+    protected function writeEndOfObject()
     {
         $this->write('}');
     }
@@ -57,7 +57,7 @@ class SimpleJsonCounterPrinter extends ResultPrinter implements TestListener
      * @param mixed $value
      * @param bool  $first
      */
-    protected function writeObjectComponent($name, $value, $first = false): void
+    protected function writeObjectComponent($name, $value, $first = false)
     {
         $this->write(sprintf(
             '%s"%s":%s',
