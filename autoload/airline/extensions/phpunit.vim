@@ -6,7 +6,7 @@ let s:spc                  = g:airline_symbols.space
 let s:part_name_format     = 'phpunit-%s'
 let s:function_name_format = 'airline#extensions#phpunit#get_formated_%s'
 
-" Used as an enum
+" Defines the counters available {{{
 let s:counters = {
   \ 'tests':      'tests',
   \ 'assertions': 'assertions',
@@ -16,15 +16,16 @@ let s:counters = {
   \ 'skipped':    'skipped',
   \ 'incomplete': 'incomplete',
   \ 'risky':      'risky',
-\ }
+\ } " }}}
 
-" Used as an enum
+" Defines the possible states {{{
 let s:states = {
   \ 'success': 'success',
   \ 'warning': 'warning',
   \ 'error':   'error',
-\ }
+\ } " }}}
 
+" Defines the formats used to print the results {{{
 let s:format = {
   \ 'tests':      'T: %d',
   \ 'assertions': 'A: %d',
@@ -34,10 +35,10 @@ let s:format = {
   \ 'skipped':    'S: %d',
   \ 'incomplete': 'I: %d',
   \ 'risky':      'R: %d',
-\}
+\} " }}}
 
 " Patch the palette of the current theme to add the state's colors for phpunit
-function! airline#extensions#phpunit#patch(palette)
+function! airline#extensions#phpunit#patch(palette) " {{{
   let l:attr = a:palette.normal.airline_z[4]
 
   " Need 232 for ctermbg, with 0 the text is not readble when attr=bold
@@ -46,17 +47,17 @@ function! airline#extensions#phpunit#patch(palette)
     \ s:states.warning: ['#000000', '#f0c674', 232, 3, l:attr],
     \ s:states.error:   ['#000000', '#cc6666', 232, 1, l:attr]
   \ }
-endfunction!
+endfunction! " }}}
 
-function! airline#extensions#phpunit#load_theme(palette)
+function! airline#extensions#phpunit#load_theme(palette) " {{{
   if exists('a:palette.phpunit') " If a theme already provides the colors
     return
   endif
 
   call airline#extensions#phpunit#patch(a:palette)
-endfunction
+endfunction " }}}
 
-function airline#extensions#phpunit#run()
+function airline#extensions#phpunit#run() " {{{
   let l:current_file = expand('%')
   call phpunit#run_file(l:current_file)
 
@@ -66,9 +67,9 @@ function airline#extensions#phpunit#run()
   endif
 
   AirlineRefresh " To update the statusline
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#init(ext)
+function! airline#extensions#phpunit#init(ext) " {{{
   command! -nargs=0 PHPUnitRunInStatusline call airline#extensions#phpunit#run()
   augroup AirlinePhpunit
     autocmd!
@@ -85,9 +86,9 @@ function! airline#extensions#phpunit#init(ext)
 
   " Function to call to configure the colors for the plugin
   call a:ext.add_theme_func('airline#extensions#phpunit#load_theme')
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#apply(...)
+function! airline#extensions#phpunit#apply(...) " {{{
   " Do nothing if there is no tests results, otherwise the section colors will
   " change in favor of "palette.phpunit.success"
   if !s:CountOf(s:counters.tests)
@@ -100,20 +101,20 @@ function! airline#extensions#phpunit#apply(...)
   let l:content = s:spc . l:section_sep . s:spc .
     \airline#section#create_left(s:OrderedPartsNames())
   call airline#extensions#append_to_section('z', l:content)
-endfunction
+endfunction " }}}
 
 " Change the colors of the section according to the state of the tests results
-function! s:ChangeColors()
+function! s:ChangeColors() " {{{
   let l:palette = g:airline#themes#{g:airline_theme}#palette
 
   let l:palette.normal.airline_z = l:palette.phpunit[s:TestsResultsState()]
 
   " Refresh the colors of the section
   call airline#highlighter#highlight(['normal']) "Only override the colors in normal mode
-endfunction
+endfunction " }}}
 
 " Return the state of the tests results
-function! s:TestsResultsState()
+function! s:TestsResultsState() " {{{
   if s:TestsWereSuccessful() &&
     \ empty(airline#extensions#phpunit#get_formated_incomplete()) &&
     \ empty(airline#extensions#phpunit#get_formated_skipped()) &&
@@ -124,16 +125,16 @@ function! s:TestsResultsState()
   else
     return s:states.error
   endif
-endfunction
+endfunction " }}}
 
 " Checks if the tests were successful
-function! s:TestsWereSuccessful()
+function! s:TestsWereSuccessful() " {{{
   return empty(airline#extensions#phpunit#get_formated_errors()) &&
     \ empty(airline#extensions#phpunit#get_formated_failures()) &&
     \ empty(airline#extensions#phpunit#get_formated_warnings())
-endfunction
+endfunction " }}}
 
-function! s:FormatedPart(type)
+function! s:FormatedPart(type) " {{{
   if !s:CountOf(a:type)
     return ''
   endif
@@ -142,18 +143,18 @@ function! s:FormatedPart(type)
     \ get(g:, printf('airline#extensions#phpunit#%s_format', a:type), s:format[a:type]),
     \ s:CountOf(a:type)
   \ )
-endfunction
+endfunction " }}}
 
-function! s:PartName(type)
+function! s:PartName(type) " {{{
   return printf(s:part_name_format, a:type)
-endfunction
+endfunction " }}}
 
-function! s:FunctionName(type)
+function! s:FunctionName(type) " {{{
   return printf(s:function_name_format, a:type)
-endfunction
+endfunction " }}}
 
 " values() does not guaranty the order of the resulted list
-function! s:OrderedPartsNames()
+function! s:OrderedPartsNames() " {{{
   return [
     \ s:PartName(s:counters.tests),
     \ s:PartName(s:counters.assertions),
@@ -164,40 +165,42 @@ function! s:OrderedPartsNames()
     \ s:PartName(s:counters.incomplete),
     \ s:PartName(s:counters.risky),
   \ ]
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_tests()
+function! airline#extensions#phpunit#get_formated_tests() " {{{
   return s:FormatedPart(s:counters.tests)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_assertions()
+function! airline#extensions#phpunit#get_formated_assertions() " {{{
   return s:FormatedPart(s:counters.assertions)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_errors()
+function! airline#extensions#phpunit#get_formated_errors() " {{{
   return s:FormatedPart(s:counters.errors)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_failures()
+function! airline#extensions#phpunit#get_formated_failures() " {{{
   return s:FormatedPart(s:counters.failures)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_warnings()
+function! airline#extensions#phpunit#get_formated_warnings() " {{{
   return s:FormatedPart(s:counters.warnings)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_skipped()
+function! airline#extensions#phpunit#get_formated_skipped() " {{{
   return s:FormatedPart(s:counters.skipped)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_incomplete()
+function! airline#extensions#phpunit#get_formated_incomplete() " {{{
   return s:FormatedPart(s:counters.incomplete)
-endfunction
+endfunction " }}}
 
-function! airline#extensions#phpunit#get_formated_risky()
+function! airline#extensions#phpunit#get_formated_risky() " {{{
   return s:FormatedPart(s:counters.risky)
-endfunction
+endfunction " }}}
 
-function! s:CountOf(type)
+function! s:CountOf(type) " {{{
   return get(get(w:, 'phpunit_results', {}), a:type, 0)
-endfunction
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker

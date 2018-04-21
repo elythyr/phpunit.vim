@@ -1,21 +1,21 @@
-function! phpunit#windows#id()
+function! phpunit#windows#id() " {{{
   return get(t:, 'phpunit_winid')
-endfunction
+endfunction " }}}
 
-function! phpunit#windows#nr()
+function! phpunit#windows#nr() " {{{
   return win_id2win(phpunit#windows#id())
-endfunction
+endfunction " }}}
 
 " Param: string a:1 file
-function! phpunit#windows#opened(...)
+function! phpunit#windows#opened(...) " {{{
   if a:0
     return -1 != bufwinid(phpunit#buffers#nr(a:1))
   else
     return 0 != win_id2win(phpunit#windows#id())
   endif
-endfunction
+endfunction " }}}
 
-function phpunit#windows#open(file)
+function phpunit#windows#open(file) " {{{
   if !phpunit#windows#opened(a:file)
     if g:phpunit_tests_results_in_preview
       call phpunit#windows#preview(a:file)
@@ -27,9 +27,9 @@ function phpunit#windows#open(file)
   endif
 
   call phpunit#windows#update()
-endfunction
+endfunction " }}}
 
-function! phpunit#windows#preview(file)
+function! phpunit#windows#preview(file) " {{{
   silent execute ':' . join(g:phpunit_tests_results_position, ' ') . ' pedit + #' . phpunit#buffers#nr(a:file)
 
   wincmd P " Go to the preview window
@@ -37,9 +37,9 @@ function! phpunit#windows#preview(file)
   call phpunit#windows#resize()
   setlocal nobuflisted
   wincmd p " Go back to the user window
-endfunction
+endfunction " }}}
 
-function! phpunit#windows#normal(file)
+function! phpunit#windows#normal(file) " {{{
   if phpunit#windows#opened()
     silent execute phpunit#windows#nr() .'wincmd w'
   else
@@ -56,12 +56,12 @@ function! phpunit#windows#normal(file)
   call phpunit#messages#debug('execute :edit + #' . l:bufnr)
 
   wincmd p
-endfunction
+endfunction " }}}
 
 " Update the window, usefull when the runned tests were alredy opened in a
 " window.
 " Put the cursor on the last line, if needed, to allow to see the results
-function! phpunit#windows#update()
+function! phpunit#windows#update() " {{{
   execute phpunit#windows#nr() 'wincmd w'
 
   " If the buffer as more line than the window can show
@@ -71,25 +71,27 @@ function! phpunit#windows#update()
   endif
 
   wincmd p
-endfunction
+endfunction " }}}
 
-function! phpunit#windows#resize()
+function! phpunit#windows#resize() " {{{
   let l:cmd = ':'
   if phpunit#are_tests_opened_verticaly()
     let l:cmd .= 'vertical '
   endif
 
   execute l:cmd . 'resize ' . g:phpunit_window_size
-endfunction
+endfunction " }}}
 
-function! phpunit#windows#close()
+function! phpunit#windows#close() " {{{
   if !phpunit#windows#opened()
     return
   endif
 
   execute phpunit#windows#nr() 'wincmd c'
-endfunction
+endfunction " }}}
 
-function! s:SetWinid(winid)
+function! s:SetWinid(winid) " {{{
   let t:phpunit_winid = a:winid
-endfunction
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker

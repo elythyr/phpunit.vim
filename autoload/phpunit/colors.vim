@@ -4,16 +4,16 @@ let s:force_colors_options           = '--colors=always'
 let s:no_colors_option               = '--colors=never'
 let s:phpunit_filetype               = 'phpunit'
 
-function! phpunit#colors#can_use_ansi()
+function! phpunit#colors#can_use_ansi() " {{{
   "return 0
   return 2 == exists(':AnsiEsc')
-endfunction
+endfunction " }}}
 
-function! phpunit#colors#escape_ansi()
+function! phpunit#colors#escape_ansi() " {{{
     AnsiEsc
-endfunction
+endfunction " }}}
 
-function! phpunit#colors#highlight()
+function! phpunit#colors#highlight() " {{{
   if phpunit#colors#can_use_ansi()
     call phpunit#messages#debug('Colorize with ANSI colors')
     call phpunit#colors#escape_ansi()
@@ -21,9 +21,9 @@ function! phpunit#colors#highlight()
     call phpunit#messages#debug('Colorize using filetype')
     execute ':setlocal filetype=' . s:phpunit_filetype
   endif
-endfunction
+endfunction " }}}
 
-fun! phpunit#colors#activated(cmd)
+function! phpunit#colors#activated(cmd) " {{{
   for l:option in a:cmd
     if l:option =~# s:activate_colors_option_pattern
       return 1
@@ -31,18 +31,20 @@ fun! phpunit#colors#activated(cmd)
   endfor
 
   return 0
-endfun
+endfunction " }}}
 
-fun! phpunit#colors#handle_option(cmd)
+function! phpunit#colors#handle_option(cmd) " {{{
   call map(a:cmd, function('s:ConvertAutoColorsOption'))
-endfun
+endfunction " }}}
 
 " We must force the colors if we want to use ANSI colors
-fun! s:ConvertAutoColorsOption(index, option)
+function! s:ConvertAutoColorsOption(index, option) " {{{
   if phpunit#colors#can_use_ansi() && a:option =~# s:auto_colors_option_pattern
     call phpunit#messages#debug('Forces the coloration')
     return s:force_colors_options
   endif
 
   return a:option
-endfun
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker

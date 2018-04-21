@@ -1,17 +1,17 @@
-function! phpunit#are_tests_opened_verticaly()
+function! phpunit#are_tests_opened_verticaly() " {{{
   return -1 != index(g:phpunit_tests_results_position, 'vertical')
-endfunction
+endfunction " }}}
 
-function! phpunit#run_dir(dir, ...)
+function! phpunit#run_dir(dir, ...) " {{{
   let l:dir = resolve(fnamemodify(a:dir, ':p'))
   if !isdirectory(l:dir)
     phpunit#messages#error(printf('The file "%s" is not a directory', l:dir))
   endif
 
   call call('phpunit#run', [l:dir] + a:000)
-endfunction
+endfunction " }}}
 
-function! phpunit#run_file(file, ...)
+function! phpunit#run_file(file, ...) " {{{
   let l:test_file = phpunit#files#test(a:file)
 
   if empty(glob(l:test_file))
@@ -23,13 +23,13 @@ function! phpunit#run_file(file, ...)
   endif
 
   call call('phpunit#run', [l:test_file] + a:000)
-endfunction
+endfunction " }}}
 
-function! phpunit#run_testcase(testcase, ...)
+function! phpunit#run_testcase(testcase, ...) " {{{
   call call('phpunit#run_file', [expand('%'), '--filter=' . a:testcase] + a:000)
-endfunction
+endfunction " }}}
 
-function! phpunit#run(file, ...)
+function! phpunit#run(file, ...) " {{{
   let l:saved_view = winsaveview()
 
   call phpunit#messages#title('Running PHP Unit test(s) for ' . a:file)
@@ -69,9 +69,9 @@ function! phpunit#run(file, ...)
     call winrestview(l:saved_view)
     call phpunit#messages#debug(printf('Switched back to the previous buffer %s (#%d)', bufname('%'), bufnr('%')))
   endtry
-endfunction
+endfunction " }}}
 
-function! s:BuildCmd(...)
+function! s:BuildCmd(...) " {{{
   let l:cmd = []
 
   if !empty(g:php_bin)
@@ -83,4 +83,6 @@ function! s:BuildCmd(...)
   call extend(l:cmd, a:000)
 
   return l:cmd
-endfunction
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker

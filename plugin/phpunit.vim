@@ -18,3 +18,5 @@ command! -nargs=0 PHPUnitClose :call phpunit#windows#close()
 
 call phpunit#init#bootstrap()
 call phpunit#init#mappings()
+
+" vim: ts=2 sw=2 et fdm=marker

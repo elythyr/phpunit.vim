@@ -1,6 +1,6 @@
 let s:printer_path = fnamemodify(resolve(expand('<sfile>:p')), ':h:h:h') . '/Printer'
 
-function! phpunit#init#bootstrap()
+function! phpunit#init#bootstrap() " {{{
   if get(s:, 'bootstraped', 0)
     return
   endif
@@ -21,9 +21,9 @@ function! phpunit#init#bootstrap()
   call s:ProvidesAdditionalOptionsToPhpunit()
 
   let s:bootstraped = 1
-endfunction
+endfunction " }}}
 
-function! phpunit#init#mappings()
+function! phpunit#init#mappings() " {{{
   if get(s:, 'mapped', 0)
     return
   endif
@@ -39,23 +39,23 @@ function! phpunit#init#mappings()
   nmap <Leader>tc <Plug>PhpunitClose
 
   let s:mapped = 1
-endfunction
+endfunction " }}}
 
-function! s:CheckedOptions(name, default)
+function! s:CheckedOptions(name, default) " {{{
   if !exists('g:{a:name}')
     let g:{a:name} = v:t_func == type(a:default) ? a:default() : a:default
   endif
-endfunction
+endfunction " }}}
 
-function! s:DefaultTestsResultPosition()
+function! s:DefaultTestsResultPosition() " {{{
   return g:phpunit_tests_results_in_preview ? ['botright'] : ['vertical', 'rightbelow']
-endfunction
+endfunction " }}}
 
-function! s:DefaultPhpunitWindowsSize()
+function! s:DefaultPhpunitWindowsSize() " {{{
   return phpunit#are_tests_opened_verticaly() ? 50 : 12
-endfunction
+endfunction " }}}
 
-function! s:ProvidesAdditionalOptionsToPhpunit()
+function! s:ProvidesAdditionalOptionsToPhpunit() " {{{
   call add(g:phpunit_options, printf('--include-path=%s', s:printer_path))
 
   if s:PhpUnitVersionAtLeast(7.0)
@@ -67,9 +67,9 @@ function! s:ProvidesAdditionalOptionsToPhpunit()
   if phpunit#are_tests_opened_verticaly()
     call add (g:phpunit_options, '--columns=' . g:phpunit_window_size)
   endif
-endfunction
+endfunction " }}}
 
-function! s:PhpUnitVersionAtLeast(version)
+function! s:PhpUnitVersionAtLeast(version) " {{{
   call system(g:phpunit_bin . ' --atleast-version ' . string(a:version))
 
   if 0 == v:shell_error
@@ -77,4 +77,6 @@ function! s:PhpUnitVersionAtLeast(version)
   endif
 
   return v:false
-endfunction
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker

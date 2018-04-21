@@ -1,8 +1,8 @@
-function! phpunit#files#is_test(filename)
+function! phpunit#files#is_test(filename) " {{{
   return a:filename =~# printf('\v%s%s$', g:phpunit_test_file_suffix, g:php_ext_pattern)
-endfunction!
+endfunction! " }}}
 
-function! phpunit#files#src(file)
+function! phpunit#files#src(file) " {{{
   if !phpunit#files#is_test(a:file)
     return fnamemodify(a:file, ':p')
   endif
@@ -14,9 +14,9 @@ function! phpunit#files#src(file)
     \ '\1',
     \ ''
   \ )
-endfunction
+endfunction " }}}
 
-function! phpunit#files#test(file)
+function! phpunit#files#test(file) " {{{
   if phpunit#files#is_test(a:file)
     return fnamemodify(a:file, ':p')
   endif
@@ -27,9 +27,9 @@ function! phpunit#files#test(file)
     \ fnamemodify(l:test_file, ':r') . g:phpunit_test_file_suffix,
     \ fnamemodify(l:test_file, ':e')
   \ )
-endfunction
+endfunction " }}}
 
-function! phpunit#files#switch()
+function! phpunit#files#switch() " {{{
   let l:file_to_open = expand('%')
 
   if phpunit#files#is_test(l:file_to_open)
@@ -47,18 +47,18 @@ function! phpunit#files#switch()
   endif
 
   call phpunit#files#open(l:file_to_open)
-endfunction
+endfunction " }}}
 
-function! phpunit#files#create(file)
+function! phpunit#files#create(file) " {{{
   let l:file_path = fnamemodify(a:file, ':h')
 
   if !isdirectory(l:file_path)
     call mkdir(l:file_path, 'p')
     call phpunit#messages#debug('Creates the directory : ' . l:file_path)
   endif
-endfunction
+endfunction " }}}
 
-function! phpunit#files#open(file)
+function! phpunit#files#open(file) " {{{
   let l:file_window = bufwinnr(a:file)
 
   if -1 != l:file_window
@@ -69,17 +69,17 @@ function! phpunit#files#open(file)
     \ : 'edit'
     execute l:cmd a:file
   endif
-endfunction
+endfunction " }}}
 
-function! phpunit#files#tests_path()
+function! phpunit#files#tests_path() " {{{
   if !exists('b:phpunit_tests_path')
     let b:phpunit_tests_path = fnamemodify(resolve(finddir(g:phpunit_tests_dir, '.;')), ':p:h')
   endif
 
   return b:phpunit_tests_path
-endfunction
+endfunction " }}}
 
-function! phpunit#files#src_path()
+function! phpunit#files#src_path() " {{{
   if !exists('b:phpunit_src_path')
     if '.' == g:phpunit_src_dir
       let b:phpunit_src_path = fnamemodify(phpunit#files#tests_path(), ':h')
@@ -89,4 +89,6 @@ function! phpunit#files#src_path()
   endif
 
   return b:phpunit_src_path
-endfunction
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker

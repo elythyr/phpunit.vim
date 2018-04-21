@@ -1,23 +1,23 @@
 let s:bufname_format = 'PHPUnit - %s'
 let s:buffers        = {}
 
-function! phpunit#buffers#name(file)
+function! phpunit#buffers#name(file) " {{{
   if !s:Exists(a:file)
     call s:Add(a:file)
   endif
 
   return s:buffers[a:file]['name']
-endfunction
+endfunction " }}}
 
-function! phpunit#buffers#nr(file)
+function! phpunit#buffers#nr(file) " {{{
   if !s:Exists(a:file)
     call s:Add(a:file)
   endif
 
   return s:buffers[a:file]['nr']
-endfunction
+endfunction " }}}
 
-function! phpunit#buffers#create(file)
+function! phpunit#buffers#create(file) " {{{
   if s:Exists(a:file) && -1 != s:buffers[a:file].nr
     throw printf('Trying to create an already existing buffer for the file "%s"', a:file)
   endif
@@ -35,39 +35,39 @@ function! phpunit#buffers#create(file)
     \ bufhidden=hide
     \ noswapfile
     \ buftype=nowrite
-endfunction
+endfunction " }}}
 
-function! phpunit#buffers#switch(file)
+function! phpunit#buffers#switch(file) " {{{
   execute ':buffer' phpunit#buffers#nr(a:file)
   call phpunit#messages#debug(printf('Switched to buffer %s (#%d)', phpunit#buffers#name(a:file), phpunit#buffers#nr(a:file)))
-endfunction
+endfunction " }}}
 
-function! s:FormatName(file)
+function! s:FormatName(file) " {{{
   return printf(s:bufname_format, isdirectory(a:file) ? a:file : s:GetClassName(a:file))
-endfunction
+endfunction " }}}
 
-function! s:Exists(file)
+function! s:Exists(file) " {{{
   return exists('s:buffers[a:file]')
-endfunction
+endfunction " }}}
 
-function! s:Add(file)
+function! s:Add(file) " {{{
   call s:Register(a:file, v:false)
-endfunction
+endfunction " }}}
 
-function! s:Create(file)
+function! s:Create(file) " {{{
   call s:Register(a:file, v:true)
-endfunction
+endfunction " }}}
 
-function! s:Register(file, create)
+function! s:Register(file, create) " {{{
   let l:name = s:FormatName(a:file)
 
   let s:buffers[a:file] = {
     \'name': l:name,
     \'nr': bufnr(l:name, a:create),
   \}
-endfunction
+endfunction " }}}
 
-function! s:GetClassName(file)
+function! s:GetClassName(file) " {{{
   let l:pattern = printf(
         \ '\v%%(%s)?%s$',
         \ g:phpunit_test_file_suffix,
@@ -75,4 +75,6 @@ function! s:GetClassName(file)
         \ )
 
   return substitute(fnamemodify(a:file, ':t'), l:pattern, '', '')
-endfunction
+endfunction " }}}
+
+" vim: ts=2 sw=2 et fdm=marker
