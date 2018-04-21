@@ -1,4 +1,5 @@
 " TODO: add genereation of testcase ?
+" TODO: Make another PHPUnit printer to generate an output for the quickfix
 
 if exists('g:loaded_phpunit')
   finish

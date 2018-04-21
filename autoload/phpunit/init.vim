@@ -1,3 +1,5 @@
+let s:printer_path = fnamemodify(resolve(expand('<sfile>:p')), ':h:h:h') . '/Printer'
+
 function! phpunit#init#bootstrap()
   if get(s:, 'bootstraped', 0)
     return
@@ -54,10 +56,25 @@ function! s:DefaultPhpunitWindowsSize()
 endfunction
 
 function! s:ProvidesAdditionalOptionsToPhpunit()
-  call add(g:phpunit_options, printf('--include-path=%s', fnamemodify(phpunit#sfile(), ':p:h:h')))
-  call add(g:phpunit_options, '--printer=SimpleJsonCounterPrinter')
+  call add(g:phpunit_options, printf('--include-path=%s', s:printer_path))
+
+  if s:PhpUnitVersionAtLeast(7.0)
+    call add(g:phpunit_options, '--printer=SimpleJsonCounterPrinter')
+  else
+    call add(g:phpunit_options, '--printer=SimpleJsonCounterPrinterPreV7')
+  endif
 
   if phpunit#are_tests_opened_verticaly()
     call add (g:phpunit_options, '--columns=' . g:phpunit_window_size)
   endif
+endfunction
+
+function! s:PhpUnitVersionAtLeast(version)
+  call system(g:phpunit_bin . ' --atleast-version ' . string(a:version))
+
+  if 0 == v:shell_error
+    return v:true
+  endif
+
+  return v:false
 endfunction
