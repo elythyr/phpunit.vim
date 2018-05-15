@@ -5,7 +5,7 @@ use PHPUnit\Framework\TestResult;
 use PHPUnit\TextUI\ResultPrinter;
 
 /**
- * Class: SimpleJsonCounterPrinter
+ * Class: SimpleJsonCounterPrinterPreV7
  * A simple JSON printer which will counts what the number of events
  * and print the results as a JSON object.
  *
@@ -14,7 +14,7 @@ use PHPUnit\TextUI\ResultPrinter;
  * @see TestListener
  * @see Printer
  */
-class SimpleJsonCounterPrinter extends ResultPrinter implements TestListener
+class SimpleJsonCounterPrinterPreV7 extends ResultPrinter implements TestListener
 {
     /**
      * @param TestResult $result
